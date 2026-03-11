@@ -9,7 +9,7 @@
             font-family: "jf-open-huninn", "Microsoft JhengHei", sans-serif; 
             margin: 0;
             padding: 3vh 3vw; 
-            background-color: #fce4ec; /* 數學區換個粉嫩的底色區隔 */
+            background-color: #fce4ec; 
             color: #444;
             display: flex;
             flex-direction: column;
@@ -72,15 +72,20 @@
 
         .back-btn {
             margin-top: 50px;
-            padding: 10px 25px;
+            padding: 12px 30px;
             background-color: #ad1457;
             color: white;
             text-decoration: none;
             border-radius: 50px;
             font-weight: bold;
             transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(173, 20, 87, 0.3);
         }
-        .back-btn:hover { background-color: #880e4f; transform: scale(1.05); }
+        .back-btn:hover { 
+            background-color: #880e4f; 
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(173, 20, 87, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -90,6 +95,12 @@
     </div>
     
     <div class="grid">
+        <a href="./scale/index.html" class="card">
+            <div class="icon">⚖️</div>
+            <h3>重量秤秤看</h3>
+            <p>好玩的重量練習</p>
+        </a>
+
         <a href="./point/index.html" class="card">
             <div class="icon">🍎</div>
             <h3>認識小數</h3>
@@ -98,7 +109,7 @@
 
         </div>
 
-    <a href="https://marypingu213-code.github.io/G3-diamond/" class="back-btn">⬅ 回到主遊戲大廳</a>
+    <a href="https://marypingu213-code.github.io/diamond-portal/" class="back-btn">⬅ 回到主遊戲大廳</a>
 
 </body>
 </html>
