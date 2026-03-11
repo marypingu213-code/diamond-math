@@ -9,16 +9,41 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Microsoft JhengHei';
             padding: 30px;
             background-color: #f4f6f8;
+            /* 讓右上角設定可以絕對定位 */
+            position: relative; 
+        }
+
+        /* ====== 右上角速度控制拉桿 ====== */
+        .speed-control {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 2px solid #ccc;
+            font-weight: bold;
+            color: #555;
+            z-index: 100;
+        }
+        input[type="range"] {
+            width: 100px;
+            cursor: pointer;
         }
 
         /* 上方橫式輸入區 */
         .top-formula {
             display: grid;
-            grid-template-columns: 120px 30px 120px 30px 120px; /* 增加一欄給「差」 */
+            grid-template-columns: 120px 30px 120px 30px 120px; 
             align-items: center;
             justify-items: center;
             gap: 10px 15px;
             margin-bottom: 30px;
+            margin-top: 20px;
         }
         .formula-label {
             font-size: 16px;
@@ -57,7 +82,7 @@
             box-sizing: border-box;
         }
 
-        /* 下方主要版面 (使用 Flex 讓左右等高) */
+        /* 下方主要版面 */
         .main-layout {
             display: flex;
             gap: 20px;
@@ -67,20 +92,20 @@
         /* ====== 左側：直式算式框 ====== */
         .math-box {
             width: 220px;
-            min-height: 520px; /* 增加整體高度 */
+            min-height: 520px; 
             background-color: white;
             border: 3px solid #333;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-bottom: 60px; /* 增加底部空間 */
+            padding-bottom: 60px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             box-sizing: border-box;
         }
         .math-header {
             width: 100%;
-            height: 115px; /* 固定高度，為了對齊右側 */
+            height: 115px; 
             display: flex;
             align-items: center;
             justify-content: center;
@@ -92,7 +117,7 @@
         }
         .vertical-math-display {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 54px; /* 加大直式字體 */
+            font-size: 54px; 
             width: 100%;
         }
         .math-row {
@@ -119,9 +144,9 @@
             margin-right: 5%;
         }
         .math-row.result-row {
-            color: #d84315; /* 直式解答顏色 */
+            color: #d84315; 
             font-weight: bold;
-            margin-top: 25px; /* 答案與底線的距離 */
+            margin-top: 25px; 
             margin-bottom: 0;
         }
 
@@ -129,7 +154,7 @@
         .blocks-box {
             flex-grow: 1;
             display: flex;
-            min-height: 520px; /* 增加整體高度 */
+            min-height: 520px; 
             background-color: white;
             border: 3px solid #333;
             border-radius: 8px;
@@ -152,7 +177,7 @@
             flex: 1.2;
         }
 
-        /* 位值表頭 (為了對齊左邊，總高度設為 115px: 65px + 50px) */
+        /* 位值表頭 */
         .place-title {
             height: 65px;
             display: flex;
@@ -196,6 +221,8 @@
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+            /* 觸控優化：避免觸控時觸發螢幕捲動 */
+            touch-action: none; 
             transition: transform 0.2s, opacity 0.3s;
         }
         .orange-rod:active { cursor: grabbing; }
@@ -226,6 +253,8 @@
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+            /* 觸控優化 */
+            touch-action: none; 
             transition: transform 0.2s, opacity 0.3s;
         }
 
@@ -256,7 +285,7 @@
             font-weight: bold;
             font-family: inherit;
             padding: 12px 50px;
-            background-color: #d84315; /* 配合解答的橘紅色 */
+            background-color: #d84315; 
             color: white;
             border: none;
             border-radius: 8px;
@@ -271,19 +300,27 @@
 </head>
 <body>
 
+    <!-- 右上角淡化速度控制 -->
+    <div class="speed-control">
+        <span>淡化速度：慢</span>
+        <!-- 數值 0 代表 1000ms，數值 100 代表 500ms -->
+        <input type="range" id="speed-slider" min="0" max="100" value="0">
+        <span>快</span>
+    </div>
+
     <!-- 上方橫式輸入區 -->
     <div class="top-formula">
         <div class="formula-label">被減數</div>
         <div class="formula-label"></div>
         <div class="formula-label">減數</div>
         <div class="formula-label"></div>
-        <div class="formula-label">差</div> <!-- 新增標籤 -->
+        <div class="formula-label">差</div> 
 
         <input type="number" id="minuend" value="2.4" step="0.1" min="0">
         <div class="formula-operator">-</div>
         <input type="number" id="subtrahend" value="0.8" step="0.1" min="0">
         <div class="formula-operator">=</div>
-        <div class="result-box" id="horizontal-result"></div> <!-- 橫式解答框 -->
+        <div class="result-box" id="horizontal-result"></div> 
     </div>
 
     <!-- 下方主要版面 -->
@@ -334,18 +371,16 @@
         const verticalMathDiv = document.getElementById('vertical-math');
         const orangeZone = document.getElementById('orange-zone');
         const whiteZone = document.getElementById('white-zone');
-        
         const submitBtn = document.getElementById('submit-btn');
         const horizontalResult = document.getElementById('horizontal-result');
+        const speedSlider = document.getElementById('speed-slider');
 
-        // 格式化數字 (分離整數與小數)
         function formatNumber(numStr) {
             if (!numStr.includes('.')) return { int: numStr, dec: '' };
             const parts = numStr.split('.');
             return { int: parts[0], dec: parts[1] };
         }
 
-        // 更新直式算式 (可選擇是否顯示解答)
         function updateVerticalMath(showResult = false, diffValue = 0) {
             const m = formatNumber(minuendInput.value || "0");
             const s = formatNumber(subtrahendInput.value || "0");
@@ -377,7 +412,6 @@
                     </div>
                 `;
             } else {
-                // 利用隱藏的佔位符確保排版不跳動
                 html += `
                     <div class="math-row result-row" style="visibility: hidden;">
                         <div class="math-cell operator"></div>
@@ -391,20 +425,28 @@
             verticalMathDiv.innerHTML = html;
         }
 
-        // 清除解答顯示 (當學生更改題目時)
         function resetResult() {
             horizontalResult.textContent = '';
             updateVerticalMath(false);
         }
 
-        // 為元素加上「長按 1 秒淡化」的功能
+        // ====== 更新：支援時間滑桿與觸控防干擾的長按事件 ======
         function addLongPressListener(el) {
             let pressTimer;
+            let startX = 0, startY = 0;
 
             const startPress = (e) => {
                 if (e.type === 'mousedown' && e.button !== 0) return;
-                
                 el.classList.add('pressing'); 
+
+                if (e.type.startsWith('touch')) {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }
+
+                // 讀取拉桿數值：0 代表 1000ms(1秒), 100 代表 500ms(0.5秒)
+                const sliderValue = parseInt(speedSlider.value, 10);
+                const fadeDelay = 1000 - (sliderValue * 5); 
 
                 pressTimer = setTimeout(() => {
                     el.classList.remove('pressing');
@@ -413,7 +455,16 @@
                     if (el.classList.contains('orange-rod')) {
                         el.draggable = !el.classList.contains('faded');
                     }
-                }, 1000);
+                }, fadeDelay);
+            };
+
+            const movePress = (e) => {
+                if (e.type.startsWith('touch')) {
+                    const dx = Math.abs(e.touches[0].clientX - startX);
+                    const dy = Math.abs(e.touches[0].clientY - startY);
+                    // 如果手指滑動超過 10px，取消長按判定（讓給觸控拖曳邏輯）
+                    if (dx > 10 || dy > 10) cancelPress();
+                }
             };
 
             const cancelPress = () => {
@@ -423,6 +474,10 @@
 
             el.addEventListener('mousedown', startPress);
             el.addEventListener('touchstart', startPress, { passive: true });
+            
+            el.addEventListener('mousemove', movePress);
+            el.addEventListener('touchmove', movePress, { passive: true });
+
             el.addEventListener('mouseup', cancelPress);
             el.addEventListener('mouseleave', cancelPress);
             el.addEventListener('touchend', cancelPress);
@@ -431,7 +486,6 @@
             el.addEventListener('contextmenu', e => e.preventDefault());
         }
 
-        // 重新讀取輸入框數值並生成積木
         function updateBlocksFromInput() {
             const val = parseFloat(minuendInput.value) || 0;
             state.orangeRods = Math.floor(val);
@@ -448,9 +502,67 @@
                 rod.className = 'orange-rod';
                 rod.draggable = true;
                 
+                // --- 桌機版原生拖曳 ---
                 rod.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', 'orange');
                     e.dataTransfer.effectAllowed = 'move';
+                });
+
+                // --- 平板/大屏觸控專屬拖曳邏輯 ---
+                let isTouchDragging = false;
+                let dragGhost = null;
+                let touchStartX = 0, touchStartY = 0;
+
+                rod.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1 || rod.classList.contains('faded')) return;
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    isTouchDragging = false;
+                }, { passive: true });
+
+                rod.addEventListener('touchmove', (e) => {
+                    if (rod.classList.contains('faded')) return;
+                    const touch = e.touches[0];
+                    const dx = Math.abs(touch.clientX - touchStartX);
+                    const dy = Math.abs(touch.clientY - touchStartY);
+
+                    // 判斷確實是在「拖曳」而非「長按」
+                    if (!isTouchDragging && (dx > 10 || dy > 10)) {
+                        isTouchDragging = true;
+                        // 建立一個跟隨手指的虛擬物件 (Ghost)
+                        dragGhost = rod.cloneNode(true);
+                        dragGhost.style.position = 'fixed';
+                        dragGhost.style.opacity = '0.8';
+                        dragGhost.style.pointerEvents = 'none'; // 讓觸控能穿透虛擬物件感應下方區域
+                        dragGhost.style.zIndex = '9999';
+                        dragGhost.style.margin = '0';
+                        document.body.appendChild(dragGhost);
+                    }
+
+                    if (isTouchDragging) {
+                        dragGhost.style.left = (touch.clientX - rod.offsetWidth / 2) + 'px';
+                        dragGhost.style.top = (touch.clientY - rod.offsetHeight / 2) + 'px';
+                    }
+                }, { passive: false });
+
+                rod.addEventListener('touchend', (e) => {
+                    if (isTouchDragging && dragGhost) {
+                        dragGhost.remove();
+                        dragGhost = null;
+                        isTouchDragging = false;
+
+                        // 判斷手指放開的位置是否在小白積木區
+                        const touch = e.changedTouches[0];
+                        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                        if (target && (target.id === 'white-zone' || target.closest('#white-zone'))) {
+                            if (state.orangeRods > 0) {
+                                state.orangeRods -= 1;
+                                state.whiteCubes += 10;
+                                renderBlocks();
+                            }
+                        }
+                    }
                 });
 
                 addLongPressListener(rod);
@@ -465,7 +577,7 @@
             }
         }
 
-        // 退位邏輯
+        // --- 桌機版原生接收拖曳邏輯 ---
         whiteZone.addEventListener('dragover', (e) => {
             e.preventDefault(); 
             e.dataTransfer.dropEffect = 'move';
@@ -492,16 +604,13 @@
         submitBtn.addEventListener('click', () => {
             const minuend = parseFloat(minuendInput.value) || 0;
             const subtrahend = parseFloat(subtrahendInput.value) || 0;
-            
-            // 乘以 10 再除以 10 避免 JavaScript 小數點計算誤差 (如 2.4 - 0.8 = 1.59999...)
             const diff = Math.round((minuend - subtrahend) * 10) / 10;
             
-            // 顯示解答
             horizontalResult.textContent = diff;
             updateVerticalMath(true, diff);
         });
 
-        // 監聽輸入框改變 (變動時重置答案並重畫積木)
+        // 監聽輸入框改變
         minuendInput.addEventListener('input', () => {
             resetResult();
             updateBlocksFromInput();
@@ -510,7 +619,6 @@
             resetResult();
         });
 
-        // 初始化執行
         resetResult();
         updateBlocksFromInput();
     </script>
