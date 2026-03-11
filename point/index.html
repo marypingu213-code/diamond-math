@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小數減法與數棒操作台</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Microsoft JhengHei';
+            padding: 30px;
+            background-color: #f4f6f8;
+        }
+
+        /* 上方橫式輸入區 */
+        .top-formula {
+            display: grid;
+            grid-template-columns: 120px 30px 120px 30px 120px; /* 增加一欄給「差」 */
+            align-items: center;
+            justify-items: center;
+            gap: 10px 15px;
+            margin-bottom: 30px;
+        }
+        .formula-label {
+            font-size: 16px;
+            color: #555;
+            font-weight: bold;
+        }
+        .formula-operator {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            font-size: 28px;
+            width: 100%;
+            height: 52px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            padding: 5px;
+            background-color: white;
+            box-sizing: border-box;
+        }
+
+        /* 橫式的差 (解答框) */
+        .result-box {
+            font-size: 28px;
+            width: 100%;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ff5722;
+            border-radius: 6px;
+            background-color: #fff3e0;
+            color: #d84315;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+
+        /* 下方主要版面 (使用 Flex 讓左右等高) */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        /* ====== 左側：直式算式框 ====== */
+        .math-box {
+            width: 220px;
+            min-height: 520px; /* 增加整體高度 */
+            background-color: white;
+            border: 3px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 60px; /* 增加底部空間 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+        .math-header {
+            width: 100%;
+            height: 115px; /* 固定高度，為了對齊右側 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            border-bottom: 3px solid #333;
+            margin-bottom: 40px;
+            box-sizing: border-box;
+        }
+        .vertical-math-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 54px; /* 加大直式字體 */
+            width: 100%;
+        }
+        .math-row {
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 20px;
+            margin-bottom: 25px; 
+            position: relative;
+        }
+        .math-cell { text-align: right; }
+        .math-cell.operator { 
+            position: absolute;
+            left: 20px;
+            text-align: left; 
+        }
+        .math-cell.integer { width: 60px; }
+        .math-cell.dot { width: 30px; text-align: center; }
+        .math-cell.decimal { width: 60px; text-align: left; }
+        .math-line {
+            border-bottom: 4px solid #333;
+            margin-top: 15px;
+            width: 85%;
+            margin-left: auto;
+            margin-right: 5%;
+        }
+        .math-row.result-row {
+            color: #d84315; /* 直式解答顏色 */
+            font-weight: bold;
+            margin-top: 25px; /* 答案與底線的距離 */
+            margin-bottom: 0;
+        }
+
+        /* ====== 右側：教具操作框 ====== */
+        .blocks-box {
+            flex-grow: 1;
+            display: flex;
+            min-height: 520px; /* 增加整體高度 */
+            background-color: white;
+            border: 3px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden; 
+            box-sizing: border-box;
+        }
+        .zone-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .zone-column:first-child {
+            border-right: 3px solid #333;
+            background-color: #FFF9F0;
+            flex: 0.8;
+        }
+        .zone-column:last-child {
+            background-color: #F0F8FF;
+            flex: 1.2;
+        }
+
+        /* 位值表頭 (為了對齊左邊，總高度設為 115px: 65px + 50px) */
+        .place-title {
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            border-bottom: 2px dashed #666; 
+            box-sizing: border-box;
+        }
+        .sub-title {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            border-bottom: 3px solid #333;
+            box-sizing: border-box;
+        }
+        
+        /* 橘色數棒區 */
+        #orange-zone {
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .orange-rod {
+            width: 160px;
+            height: 32px;
+            background-color: #FF9800;
+            border: 2px solid #E65100;
+            border-radius: 4px;
+            cursor: grab;
+            box-shadow: 2px 3px 5px rgba(0,0,0,0.2);
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            transition: transform 0.2s, opacity 0.3s;
+        }
+        .orange-rod:active { cursor: grabbing; }
+
+        /* 小白積木區 */
+        #white-zone {
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(10, 32px); 
+            gap: 12px;
+            align-content: start;
+            justify-content: center;
+            flex-grow: 1;
+            transition: background-color 0.3s;
+        }
+        #white-zone.drag-over {
+            background-color: #E1F5FE;
+        }
+        .white-cube {
+            width: 32px;
+            height: 32px;
+            background-color: white;
+            border: 2px solid #9E9E9E;
+            border-radius: 4px;
+            box-shadow: 2px 3px 5px rgba(0,0,0,0.15);
+            animation: popIn 0.3s ease-out; 
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            transition: transform 0.2s, opacity 0.3s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pressing {
+            transform: scale(0.9) !important;
+            box-shadow: 0px 0px 0px rgba(0,0,0,0) !important;
+        }
+        .faded {
+            opacity: 0.15; 
+            filter: grayscale(100%); 
+            border-style: dashed;
+        }
+
+        /* ====== 底部送出按鈕區 ====== */
+        .action-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        .submit-btn {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: inherit;
+            padding: 12px 50px;
+            background-color: #d84315; /* 配合解答的橘紅色 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .submit-btn:hover { background-color: #bf360c; }
+        .submit-btn:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+
+    <!-- 上方橫式輸入區 -->
+    <div class="top-formula">
+        <div class="formula-label">被減數</div>
+        <div class="formula-label"></div>
+        <div class="formula-label">減數</div>
+        <div class="formula-label"></div>
+        <div class="formula-label">差</div> <!-- 新增標籤 -->
+
+        <input type="number" id="minuend" value="2.4" step="0.1" min="0">
+        <div class="formula-operator">-</div>
+        <input type="number" id="subtrahend" value="0.8" step="0.1" min="0">
+        <div class="formula-operator">=</div>
+        <div class="result-box" id="horizontal-result"></div> <!-- 橫式解答框 -->
+    </div>
+
+    <!-- 下方主要版面 -->
+    <div class="main-layout">
+        
+        <!-- 左側：直式算式框 -->
+        <div class="math-box">
+            <div class="math-header">直式算式</div>
+            <div class="vertical-math-display" id="vertical-math">
+                <!-- 直式由 JS 生成 -->
+            </div>
+        </div>
+
+        <!-- 右側：教具操作框 -->
+        <div class="blocks-box">
+            <!-- 橘色區 (個位) -->
+            <div class="zone-column">
+                <div class="place-title">個位</div>
+                <div class="sub-title">對應的橘色數棒 (整數 1)</div>
+                <div class="zone" id="orange-zone">
+                    <!-- 橘色數棒由 JS 生成 -->
+                </div>
+            </div>
+            <!-- 白色區 (十分位) -->
+            <div class="zone-column">
+                <div class="place-title">十分位</div>
+                <div class="sub-title">對應的小白積木 (小數 0.1)</div>
+                <div class="zone" id="white-zone">
+                    <!-- 小白積木由 JS 生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 送出按鈕 -->
+    <div class="action-row">
+        <button class="submit-btn" id="submit-btn">送出</button>
+    </div>
+
+    <script>
+        let state = {
+            orangeRods: 0,
+            whiteCubes: 0
+        };
+
+        const minuendInput = document.getElementById('minuend');
+        const subtrahendInput = document.getElementById('subtrahend');
+        const verticalMathDiv = document.getElementById('vertical-math');
+        const orangeZone = document.getElementById('orange-zone');
+        const whiteZone = document.getElementById('white-zone');
+        
+        const submitBtn = document.getElementById('submit-btn');
+        const horizontalResult = document.getElementById('horizontal-result');
+
+        // 格式化數字 (分離整數與小數)
+        function formatNumber(numStr) {
+            if (!numStr.includes('.')) return { int: numStr, dec: '' };
+            const parts = numStr.split('.');
+            return { int: parts[0], dec: parts[1] };
+        }
+
+        // 更新直式算式 (可選擇是否顯示解答)
+        function updateVerticalMath(showResult = false, diffValue = 0) {
+            const m = formatNumber(minuendInput.value || "0");
+            const s = formatNumber(subtrahendInput.value || "0");
+
+            let html = `
+                <div class="math-row">
+                    <div class="math-cell operator"></div>
+                    <div class="math-cell integer">${m.int}</div>
+                    <div class="math-cell dot">${m.dec ? '.' : '&nbsp;'}</div>
+                    <div class="math-cell decimal">${m.dec ? m.dec : '&nbsp;'}</div>
+                </div>
+                <div class="math-row">
+                    <div class="math-cell operator">-</div>
+                    <div class="math-cell integer">${s.int}</div>
+                    <div class="math-cell dot">${s.dec ? '.' : '&nbsp;'}</div>
+                    <div class="math-cell decimal">${s.dec ? s.dec : '&nbsp;'}</div>
+                </div>
+                <div class="math-line"></div>
+            `;
+
+            if (showResult) {
+                const r = formatNumber(diffValue.toString());
+                html += `
+                    <div class="math-row result-row">
+                        <div class="math-cell operator"></div>
+                        <div class="math-cell integer">${r.int}</div>
+                        <div class="math-cell dot">${r.dec ? '.' : '&nbsp;'}</div>
+                        <div class="math-cell decimal">${r.dec ? r.dec : '&nbsp;'}</div>
+                    </div>
+                `;
+            } else {
+                // 利用隱藏的佔位符確保排版不跳動
+                html += `
+                    <div class="math-row result-row" style="visibility: hidden;">
+                        <div class="math-cell operator"></div>
+                        <div class="math-cell integer">0</div>
+                        <div class="math-cell dot">.</div>
+                        <div class="math-cell decimal">0</div>
+                    </div>
+                `;
+            }
+
+            verticalMathDiv.innerHTML = html;
+        }
+
+        // 清除解答顯示 (當學生更改題目時)
+        function resetResult() {
+            horizontalResult.textContent = '';
+            updateVerticalMath(false);
+        }
+
+        // 為元素加上「長按 1 秒淡化」的功能
+        function addLongPressListener(el) {
+            let pressTimer;
+
+            const startPress = (e) => {
+                if (e.type === 'mousedown' && e.button !== 0) return;
+                
+                el.classList.add('pressing'); 
+
+                pressTimer = setTimeout(() => {
+                    el.classList.remove('pressing');
+                    el.classList.toggle('faded'); 
+                    
+                    if (el.classList.contains('orange-rod')) {
+                        el.draggable = !el.classList.contains('faded');
+                    }
+                }, 1000);
+            };
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+                el.classList.remove('pressing');
+            };
+
+            el.addEventListener('mousedown', startPress);
+            el.addEventListener('touchstart', startPress, { passive: true });
+            el.addEventListener('mouseup', cancelPress);
+            el.addEventListener('mouseleave', cancelPress);
+            el.addEventListener('touchend', cancelPress);
+            el.addEventListener('touchcancel', cancelPress);
+            el.addEventListener('dragstart', cancelPress);
+            el.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        // 重新讀取輸入框數值並生成積木
+        function updateBlocksFromInput() {
+            const val = parseFloat(minuendInput.value) || 0;
+            state.orangeRods = Math.floor(val);
+            state.whiteCubes = Math.round((val % 1) * 10); 
+            renderBlocks();
+        }
+
+        function renderBlocks() {
+            orangeZone.innerHTML = '';
+            whiteZone.innerHTML = '';
+
+            for (let i = 0; i < state.orangeRods; i++) {
+                const rod = document.createElement('div');
+                rod.className = 'orange-rod';
+                rod.draggable = true;
+                
+                rod.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', 'orange');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                addLongPressListener(rod);
+                orangeZone.appendChild(rod);
+            }
+
+            for (let i = 0; i < state.whiteCubes; i++) {
+                const cube = document.createElement('div');
+                cube.className = 'white-cube';
+                addLongPressListener(cube);
+                whiteZone.appendChild(cube);
+            }
+        }
+
+        // 退位邏輯
+        whiteZone.addEventListener('dragover', (e) => {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            whiteZone.classList.add('drag-over');
+        });
+
+        whiteZone.addEventListener('dragleave', () => {
+            whiteZone.classList.remove('drag-over');
+        });
+
+        whiteZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            whiteZone.classList.remove('drag-over');
+            const data = e.dataTransfer.getData('text/plain');
+            
+            if (data === 'orange' && state.orangeRods > 0) {
+                state.orangeRods -= 1;
+                state.whiteCubes += 10;
+                renderBlocks();
+            }
+        });
+
+        // 監聽「送出」按鈕
+        submitBtn.addEventListener('click', () => {
+            const minuend = parseFloat(minuendInput.value) || 0;
+            const subtrahend = parseFloat(subtrahendInput.value) || 0;
+            
+            // 乘以 10 再除以 10 避免 JavaScript 小數點計算誤差 (如 2.4 - 0.8 = 1.59999...)
+            const diff = Math.round((minuend - subtrahend) * 10) / 10;
+            
+            // 顯示解答
+            horizontalResult.textContent = diff;
+            updateVerticalMath(true, diff);
+        });
+
+        // 監聽輸入框改變 (變動時重置答案並重畫積木)
+        minuendInput.addEventListener('input', () => {
+            resetResult();
+            updateBlocksFromInput();
+        });
+        subtrahendInput.addEventListener('input', () => {
+            resetResult();
+        });
+
+        // 初始化執行
+        resetResult();
+        updateBlocksFromInput();
+    </script>
+</body>
+</html>
