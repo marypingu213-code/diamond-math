@@ -11,15 +11,39 @@
     align-items: center;
     font-family: "Microsoft JhengHei", sans-serif;
     background-color: #f0f4f8;
-    margin-top: 40px;
+    margin: 0;
+    padding-top: 20px;
     touch-action: none;
   }
+
+  /* 回到大廳按鈕樣式 */
+  .back-to-lobby {
+    align-self: flex-start;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: #00838f;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: bold;
+    border: 2px solid #00bcd4;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  .back-to-lobby:hover {
+    background-color: #00bcd4;
+    color: white;
+    transform: translateX(-5px);
+  }
+
   .scale-container {
     background: #ffffff; 
     padding: 30px;
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     text-align: center;
+    max-width: 500px;
   }
   svg {
     cursor: pointer;
@@ -58,6 +82,8 @@
 </style>
 </head>
 <body>
+
+<a href="index.html" class="back-to-lobby">🏠 回到遊戲大廳</a>
 
 <div class="scale-container">
   <svg id="scale-svg" width="450" height="450" viewBox="0 0 400 400">
@@ -165,13 +191,8 @@
     if (!isDragging) return;
     e.preventDefault(); 
     
-    let clientX = e.clientX;
-    let clientY = e.clientY;
-    
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    }
+    let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    let clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
     const { weight, angleDeg } = calculateAngleAndWeight(clientX, clientY);
     
@@ -179,10 +200,8 @@
     
     let displayWeight = (weight === 0 && angleDeg > 350) ? 3000 : weight;
     
-    // 處理公克顯示與藍色底線
     if (displayWeight >= 1000) {
       let weightStr = displayWeight.toString();
-      // 切割字串：前面代表公斤的數字，與後面代表公克的末三碼
       let kgPart = weightStr.slice(0, -3);
       let gPart = weightStr.slice(-3);
       gramsText.innerHTML = `${kgPart}<span class="underline-blue">${gPart}</span> 公克`;
@@ -190,7 +209,6 @@
       gramsText.innerHTML = `${displayWeight} 公克`;
     }
     
-    // 處理公斤與公克換算
     let kg = Math.floor(displayWeight / 1000);
     let g = displayWeight % 1000;
     
