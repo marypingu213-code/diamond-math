@@ -3,70 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數學遊戲入口網</title>
+    <title>數學教學資源大廳</title>
     <style>
+        /* 整體背景與字體設定 */
         body {
-            font-family: 'Microsoft JhengHei', sans-serif;
-            background-color: #f0f8ff;
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            color: #333;
         }
+
+        /* 標題樣式 */
         h1 {
-            color: #2c3e50;
-            margin-bottom: 30px;
+            font-size: 2.5rem;
+            color: #006064;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
         }
+
+        /* 按鈕容器 */
         .container {
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 800px;
         }
+
+        /* 遊戲卡片樣式 */
         .game-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            width: 250px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
             text-align: center;
-            width: 200px;
-            transition: transform 0.3s;
-            cursor: pointer;
             text-decoration: none;
             color: inherit;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
         }
+
+        /* 滑鼠移上去的效果 */
         .game-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border-color: #00bcd4;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
         }
+
+        /* 圖示大小 */
         .icon {
-            font-size: 50px;
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* 卡片標題 */
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #00838f;
             margin-bottom: 10px;
         }
-        .title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #3498db;
+
+        /* 卡片描述 */
+        .desc {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* 頁尾小字 */
+        footer {
+            margin-top: 50px;
+            font-size: 14px;
+            color: #006064;
         }
     </style>
 </head>
 <body>
 
-    <h1>🎮 數學教學資源庫</h1>
+    <h1>🎮 數學互動學習大廳</h1>
 
-    <div class="index.html">
-        <a href="#" class="game-card">
-            <div class="icon">🔍</div>
-            <div class="title">原本的教材</div>
-            <p>點擊查看現有練習</p>
+    <div class="container">
+        
+        <a href="original.html" class="game-card">
+            <span class="icon">📘</span>
+            <div class="title">原本的教材內容</div>
+            <div class="desc">回顧之前的數學練習與教學資源。</div>
         </a>
 
         <a href="game.html" class="game-card">
-            <div class="icon">🎲</div>
-            <div class="title">新數學遊戲</div>
-            <p>點擊開始闖關</p>
+            <span class="icon">🚀</span>
+            <div class="title">全新數學遊戲</div>
+            <div class="desc">點擊進入挑戰，邊玩邊學數學！</div>
         </a>
+
     </div>
+
+    <footer>
+        <p>© 2026 數學教學資源庫 - 讓學習變有趣</p>
+    </footer>
 
 </body>
 </html>
