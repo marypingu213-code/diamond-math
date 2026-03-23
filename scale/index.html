@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3公斤互動磅秤</title>
+<title>3公斤互動磅秤 - 線條標色唱數版</title>
 <style>
   body {
     display: flex;
@@ -11,7 +11,7 @@
     align-items: center;
     font-family: "Microsoft JhengHei", sans-serif;
     background-color: #f0f4f8;
-    margin-top: 40px;
+    margin-top: 30px;
     touch-action: none;
   }
   .scale-container {
@@ -20,10 +20,38 @@
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     text-align: center;
+    position: relative;
   }
   svg {
     cursor: pointer;
   }
+  /* 確定按鈕樣式 */
+  #confirm-btn {
+    margin-top: 20px;
+    padding: 15px 40px;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    background-color: #27ae60;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+    transition: transform 0.1s, background-color 0.2s;
+  }
+  #confirm-btn:hover {
+    background-color: #2ecc71;
+  }
+  #confirm-btn:active {
+    transform: scale(0.95);
+  }
+  #confirm-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  
+  /* 答案區樣式 (加入淡入動畫) */
   #weight-display {
     font-size: 38px;
     font-weight: bold;
@@ -37,6 +65,11 @@
     flex-direction: column;
     align-items: center;
     min-width: 280px;
+    
+    /* 初始狀態隱藏 */
+    visibility: hidden; 
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
   }
   .conversion {
     font-size: 26px;
@@ -44,11 +77,11 @@
     margin-top: 8px;
   }
   .hint {
-    color: #666;
+    color: #7f8c8d;
     margin-top: 15px;
     font-size: 16px;
+    font-weight: bold;
   }
-  /* 藍色底線樣式 */
   .underline-blue {
     text-decoration: underline;
     text-decoration-color: #3498db;
@@ -61,14 +94,18 @@
 
 <div class="scale-container">
   <svg id="scale-svg" width="450" height="450" viewBox="0 0 400 400">
+    <!-- 磅秤外框 -->
     <circle cx="200" cy="200" r="190" fill="#ffffff" stroke="#333" stroke-width="3"/>
     <circle cx="200" cy="200" r="186" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
     
+    <!-- 中央文字資訊 -->
     <text x="200" y="145" text-anchor="middle" font-size="13px" fill="#333" font-weight="bold" letter-spacing="1">最大計量 3kg</text>
     <text x="200" y="165" text-anchor="middle" font-size="13px" fill="#333" font-weight="bold" letter-spacing="1">最小刻度 10g</text>
 
+    <!-- 刻度與數字群組 -->
     <g id="ticks"></g>
-    
+
+    <!-- 紅色指針群組 -->
     <g id="pointer-group" transform="rotate(0 200 200)">
       <polygon points="188,200 212,200 200,35" fill="#e74c3c" />
       <circle cx="200" cy="200" r="12" fill="#c0392b"/>
@@ -77,11 +114,16 @@
   </svg>
 
   <br>
+  <!-- 確定按鈕 -->
+  <button id="confirm-btn">確定 (開始讀秤)</button>
+
+  <div class="hint">👆 教師請先用滑鼠拖曳指針出題</div>
+
+  <!-- 答案顯示區 -->
   <div id="weight-display">
     <span id="grams-text">0 公克</span>
     <span id="kg-text" class="conversion" style="display: none;">0 公斤 0 公克</span>
   </div>
-  <div class="hint">👆 請直接拖曳轉動指針</div>
 </div>
 
 <script>
@@ -90,9 +132,16 @@
   const gramsText = document.getElementById('grams-text');
   const kgText = document.getElementById('kg-text');
   const scaleSvg = document.getElementById('scale-svg');
+  const confirmBtn = document.getElementById('confirm-btn');
+  const displayDiv = document.getElementById('weight-display');
 
   const cx = 200, cy = 200, radius = 180;
+  let currentWeight = 0; 
+  let isDragging = false;
+  let isAnimating = false; 
+  let lastHighlightedLine = null; // 紀錄上一條被標色的線
 
+  // 1. 產生刻度與標示
   for (let i = 0; i < 3000; i += 10) {
     let angle = (i / 3000) * 360 - 90;
     let radians = angle * (Math.PI / 180);
@@ -110,12 +159,18 @@
     let y2 = cy + Math.sin(radians) * (radius - tickLength);
     
     let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("id", "tick-" + i); // 賦予獨立 ID 方便後續尋找
     line.setAttribute("x1", x1);
     line.setAttribute("y1", y1);
     line.setAttribute("x2", x2);
     line.setAttribute("y2", y2);
     line.setAttribute("stroke", "#333");
     line.setAttribute("stroke-width", strokeWidth);
+    
+    // 把原始的顏色和粗細記錄在元素身上，方便之後還原
+    line.dataset.origColor = "#333";
+    line.dataset.origWidth = strokeWidth;
+    
     ticksGroup.appendChild(line);
 
     if (i === 0 || i === 500 || i === 1000 || i === 2000) {
@@ -143,8 +198,7 @@
     }
   }
 
-  let isDragging = false;
-
+  // 2. 指針拖曳與重量計算
   function calculateAngleAndWeight(clientX, clientY) {
     const rect = scaleSvg.getBoundingClientRect();
     const x = clientX - (rect.left + rect.width / 2);
@@ -155,19 +209,27 @@
     if (angleDeg < 0) angleDeg += 360;
 
     let weight = (angleDeg / 360) * 3000;
-    weight = Math.round(weight / 10) * 10;
+    weight = Math.round(weight / 10) * 10; 
     if (weight === 3000) weight = 0; 
 
     return { weight, angleDeg: (weight / 3000) * 360 };
   }
 
+  // 清除刻度線的發光效果
+  function clearHighlight() {
+    if (lastHighlightedLine) {
+      lastHighlightedLine.setAttribute("stroke", lastHighlightedLine.dataset.origColor);
+      lastHighlightedLine.setAttribute("stroke-width", lastHighlightedLine.dataset.origWidth);
+      lastHighlightedLine = null;
+    }
+  }
+
   function updatePointer(e) {
-    if (!isDragging) return;
+    if (!isDragging || isAnimating) return; 
     e.preventDefault(); 
     
     let clientX = e.clientX;
     let clientY = e.clientY;
-    
     if (e.touches && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -175,40 +237,119 @@
 
     const { weight, angleDeg } = calculateAngleAndWeight(clientX, clientY);
     
+    // 轉動指針時，隱藏答案區並清除之前的刻度標色
+    displayDiv.style.opacity = '0';
+    displayDiv.style.visibility = 'hidden';
+    clearHighlight();
+    
+    currentWeight = (weight === 0 && angleDeg > 350) ? 3000 : weight;
     pointerGroup.setAttribute("transform", `rotate(${angleDeg} 200 200)`);
-    
-    let displayWeight = (weight === 0 && angleDeg > 350) ? 3000 : weight;
-    
-    // 處理公克顯示與藍色底線
-    if (displayWeight >= 1000) {
-      let weightStr = displayWeight.toString();
-      // 切割字串：前面代表公斤的數字，與後面代表公克的末三碼
-      let kgPart = weightStr.slice(0, -3);
-      let gPart = weightStr.slice(-3);
-      gramsText.innerHTML = `${kgPart}<span class="underline-blue">${gPart}</span> 公克`;
-    } else {
-      gramsText.innerHTML = `${displayWeight} 公克`;
-    }
-    
-    // 處理公斤與公克換算
-    let kg = Math.floor(displayWeight / 1000);
-    let g = displayWeight % 1000;
-    
-    if (displayWeight >= 1000) {
-      kgText.style.display = "block";
-      kgText.textContent = `${kg} 公斤 ${g} 公克`;
-    } else {
-      kgText.style.display = "none"; 
+  }
+
+  scaleSvg.addEventListener('mousedown', (e) => { 
+    if(!isAnimating) { isDragging = true; updatePointer(e); }
+  });
+  window.addEventListener('mousemove', updatePointer);
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  
+  scaleSvg.addEventListener('touchstart', (e) => { 
+    if(!isAnimating) { isDragging = true; updatePointer(e); }
+  }, {passive: false});
+  window.addEventListener('touchmove', updatePointer, {passive: false});
+  window.addEventListener('touchend', () => { isDragging = false; });
+
+
+  // 3. 語音唱數與動畫核心邏輯
+  const synth = window.speechSynthesis;
+  
+  function speakNumber(num) {
+    if (synth.speaking) synth.cancel(); 
+    let utterance = new SpeechSynthesisUtterance(num.toString());
+    utterance.lang = 'zh-TW';
+    utterance.rate = 1.2; 
+    synth.speak(utterance);
+  }
+
+  // 將指定的刻度線變色變粗
+  function highlightTick(weight) {
+    clearHighlight(); // 先把上一條復原
+    let line = document.getElementById("tick-" + weight);
+    if (line) {
+      line.setAttribute("stroke", "#3498db"); // 亮藍色
+      // 移除了加粗凸顯的設定，維持原本的線條粗細
+      lastHighlightedLine = line; // 記錄起來以便下次復原
     }
   }
 
-  scaleSvg.addEventListener('mousedown', (e) => { isDragging = true; updatePointer(e); });
-  window.addEventListener('mousemove', updatePointer);
-  window.addEventListener('mouseup', () => { isDragging = false; });
+  const delay = ms => new Promise(res => setTimeout(res, ms));
 
-  scaleSvg.addEventListener('touchstart', (e) => { isDragging = true; updatePointer(e); }, {passive: false});
-  window.addEventListener('touchmove', updatePointer, {passive: false});
-  window.addEventListener('touchend', () => { isDragging = false; });
+  confirmBtn.addEventListener('click', async () => {
+    if (isAnimating) return;
+    
+    if (currentWeight === 0) {
+      showFinalAnswer();
+      return;
+    }
+
+    isAnimating = true;
+    confirmBtn.disabled = true; 
+    
+    let target = currentWeight;
+    let hundreds = Math.floor(target / 100);  // 100g 的大格數
+    let tens = (target % 100) / 10;           // 剩下的 10g 小格數
+    
+    // 第一階段：每 100g 唱數與線條標色
+    for (let i = 1; i <= hundreds; i++) {
+        let w = i * 100;
+        highlightTick(w);
+        speakNumber(w);
+        await delay(700); 
+    }
+    
+    // 第二階段：剩下的每 10g 唱數與線條標色
+    for (let i = 1; i <= tens; i++) {
+        let w = hundreds * 100 + i * 10;
+        highlightTick(w);
+        speakNumber(w);
+        await delay(700); 
+    }
+    
+    // 動畫結束：清除最後一條線的標色，顯示答案
+    clearHighlight();
+    showFinalAnswer();
+    
+    isAnimating = false;
+    confirmBtn.disabled = false;
+  });
+
+  // 4. 顯示最終答案區
+  function showFinalAnswer() {
+    if (currentWeight >= 1000 && currentWeight !== 3000) {
+      let weightStr = currentWeight.toString();
+      let kgPart = weightStr.slice(0, -3);
+      let gPart = weightStr.slice(-3);
+      gramsText.innerHTML = `${kgPart}<span class="underline-blue">${gPart}</span> 公克`;
+      
+      let kg = Math.floor(currentWeight / 1000);
+      let g = currentWeight % 1000;
+      kgText.style.display = "block";
+      kgText.textContent = `${kg} 公斤 ${g} 公克`;
+    } else if(currentWeight === 3000) {
+      gramsText.innerHTML = `3<span class="underline-blue">000</span> 公克`;
+      kgText.style.display = "block";
+      kgText.textContent = `3 公斤 0 公克`;
+    } else {
+      gramsText.innerHTML = `${currentWeight} 公克`;
+      kgText.style.display = "none";
+    }
+    
+    displayDiv.style.visibility = 'visible';
+    displayDiv.style.opacity = '1';
+    
+    let finalSpeakText = kgText.style.display === "block" ? kgText.textContent : gramsText.textContent;
+    speakNumber(finalSpeakText); 
+  }
+
 </script>
 
 </body>
