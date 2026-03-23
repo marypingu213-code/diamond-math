@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3公斤互動磅秤</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Microsoft JhengHei", sans-serif;
+    background-color: #f0f4f8;
+    margin-top: 40px;
+    touch-action: none;
+  }
+  .scale-container {
+    background: #ffffff; 
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    text-align: center;
+  }
+  svg {
+    cursor: pointer;
+  }
+  #weight-display {
+    font-size: 38px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 20px;
+    padding: 15px 30px;
+    background: #f8f9fa;
+    border: 3px solid #bdc3c7;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 280px;
+  }
+  .conversion {
+    font-size: 26px;
+    color: #e74c3c;
+    margin-top: 8px;
+  }
+  .hint {
+    color: #666;
+    margin-top: 15px;
+    font-size: 16px;
+  }
+  /* 藍色底線樣式 */
+  .underline-blue {
+    text-decoration: underline;
+    text-decoration-color: #3498db;
+    text-decoration-thickness: 4px;
+    text-underline-offset: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="scale-container">
+  <svg id="scale-svg" width="450" height="450" viewBox="0 0 400 400">
+    <circle cx="200" cy="200" r="190" fill="#ffffff" stroke="#333" stroke-width="3"/>
+    <circle cx="200" cy="200" r="186" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
+    
+    <text x="200" y="145" text-anchor="middle" font-size="13px" fill="#333" font-weight="bold" letter-spacing="1">最大計量 3kg</text>
+    <text x="200" y="165" text-anchor="middle" font-size="13px" fill="#333" font-weight="bold" letter-spacing="1">最小刻度 10g</text>
+
+    <g id="ticks"></g>
+    
+    <g id="pointer-group" transform="rotate(0 200 200)">
+      <polygon points="188,200 212,200 200,35" fill="#e74c3c" />
+      <circle cx="200" cy="200" r="12" fill="#c0392b"/>
+      <circle cx="200" cy="200" r="4" fill="#111"/>
+    </g>
+  </svg>
+
+  <br>
+  <div id="weight-display">
+    <span id="grams-text">0 公克</span>
+    <span id="kg-text" class="conversion" style="display: none;">0 公斤 0 公克</span>
+  </div>
+  <div class="hint">👆 請直接拖曳轉動指針</div>
+</div>
+
+<script>
+  const ticksGroup = document.getElementById('ticks');
+  const pointerGroup = document.getElementById('pointer-group');
+  const gramsText = document.getElementById('grams-text');
+  const kgText = document.getElementById('kg-text');
+  const scaleSvg = document.getElementById('scale-svg');
+
+  const cx = 200, cy = 200, radius = 180;
+
+  for (let i = 0; i < 3000; i += 10) {
+    let angle = (i / 3000) * 360 - 90;
+    let radians = angle * (Math.PI / 180);
+    
+    let is500g = (i % 500 === 0);
+    let is100g = (i % 100 === 0);
+    let is50g = (i % 50 === 0);
+    
+    let tickLength = is500g ? 25 : (is100g ? 15 : (is50g ? 10 : 6));
+    let strokeWidth = is500g ? 2.5 : (is100g ? 1.5 : 1);
+    
+    let x1 = cx + Math.cos(radians) * radius;
+    let y1 = cy + Math.sin(radians) * radius;
+    let x2 = cx + Math.cos(radians) * (radius - tickLength);
+    let y2 = cy + Math.sin(radians) * (radius - tickLength);
+    
+    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#333");
+    line.setAttribute("stroke-width", strokeWidth);
+    ticksGroup.appendChild(line);
+
+    if (i === 0 || i === 500 || i === 1000 || i === 2000) {
+      let textRadius = radius - 45;
+      let tx = cx + Math.cos(radians) * textRadius;
+      let ty = cy + Math.sin(radians) * textRadius;
+      
+      let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", "#2c3e50");
+      text.setAttribute("font-family", "Arial, sans-serif");
+      
+      if (i === 0) {
+        text.setAttribute("x", cx);
+        text.setAttribute("y", cy - textRadius + 15);
+        text.setAttribute("font-size", "22px");
+        text.innerHTML = `<tspan x="${cx}" dy="-15">0</tspan><tspan x="${cx}" dy="24" font-size="18px">3kg</tspan>`;
+      } else {
+        text.setAttribute("x", tx);
+        text.setAttribute("y", ty + 8); 
+        text.setAttribute("font-size", "22px");
+        text.textContent = (i === 500) ? "500g" : (i / 1000) + "kg";
+      }
+      ticksGroup.appendChild(text);
+    }
+  }
+
+  let isDragging = false;
+
+  function calculateAngleAndWeight(clientX, clientY) {
+    const rect = scaleSvg.getBoundingClientRect();
+    const x = clientX - (rect.left + rect.width / 2);
+    const y = clientY - (rect.top + rect.height / 2);
+    
+    let angleRad = Math.atan2(y, x);
+    let angleDeg = angleRad * (180 / Math.PI) + 90;
+    if (angleDeg < 0) angleDeg += 360;
+
+    let weight = (angleDeg / 360) * 3000;
+    weight = Math.round(weight / 10) * 10;
+    if (weight === 3000) weight = 0; 
+
+    return { weight, angleDeg: (weight / 3000) * 360 };
+  }
+
+  function updatePointer(e) {
+    if (!isDragging) return;
+    e.preventDefault(); 
+    
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+
+    const { weight, angleDeg } = calculateAngleAndWeight(clientX, clientY);
+    
+    pointerGroup.setAttribute("transform", `rotate(${angleDeg} 200 200)`);
+    
+    let displayWeight = (weight === 0 && angleDeg > 350) ? 3000 : weight;
+    
+    // 處理公克顯示與藍色底線
+    if (displayWeight >= 1000) {
+      let weightStr = displayWeight.toString();
+      // 切割字串：前面代表公斤的數字，與後面代表公克的末三碼
+      let kgPart = weightStr.slice(0, -3);
+      let gPart = weightStr.slice(-3);
+      gramsText.innerHTML = `${kgPart}<span class="underline-blue">${gPart}</span> 公克`;
+    } else {
+      gramsText.innerHTML = `${displayWeight} 公克`;
+    }
+    
+    // 處理公斤與公克換算
+    let kg = Math.floor(displayWeight / 1000);
+    let g = displayWeight % 1000;
+    
+    if (displayWeight >= 1000) {
+      kgText.style.display = "block";
+      kgText.textContent = `${kg} 公斤 ${g} 公克`;
+    } else {
+      kgText.style.display = "none"; 
+    }
+  }
+
+  scaleSvg.addEventListener('mousedown', (e) => { isDragging = true; updatePointer(e); });
+  window.addEventListener('mousemove', updatePointer);
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  scaleSvg.addEventListener('touchstart', (e) => { isDragging = true; updatePointer(e); }, {passive: false});
+  window.addEventListener('touchmove', updatePointer, {passive: false});
+  window.addEventListener('touchend', () => { isDragging = false; });
+</script>
+
+</body>
+</html>
