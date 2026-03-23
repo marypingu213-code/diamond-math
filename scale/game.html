@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1公斤互動磅秤 - 線條標色唱數版</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Microsoft JhengHei", sans-serif;
+    background-color: #f0f4f8;
+    margin-top: 30px;
+    touch-action: none;
+  }
+  .scale-container {
+    background: #e1f0f8; /* 模擬圖片淡淡的藍色背景 */
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    text-align: center;
+    position: relative;
+  }
+  svg {
+    cursor: pointer;
+  }
+  /* 確定按鈕樣式 */
+  #confirm-btn {
+    margin-top: 20px;
+    padding: 15px 40px;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    background-color: #27ae60;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+    transition: transform 0.1s, background-color 0.2s;
+  }
+  #confirm-btn:hover {
+    background-color: #2ecc71;
+  }
+  #confirm-btn:active {
+    transform: scale(0.95);
+  }
+  #confirm-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  
+  /* 答案區樣式 (加入淡入動畫) */
+  #weight-display {
+    font-size: 38px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 20px;
+    padding: 15px 30px;
+    background: white;
+    border: 3px solid #bdc3c7;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 280px;
+    
+    /* 初始狀態隱藏 */
+    visibility: hidden; 
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+  .conversion {
+    font-size: 26px;
+    color: #e74c3c;
+    margin-top: 8px;
+  }
+  .hint {
+    color: #666;
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .underline-blue {
+    text-decoration: underline;
+    text-decoration-color: #3498db;
+    text-decoration-thickness: 4px;
+    text-underline-offset: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="scale-container">
+  <svg id="scale-svg" width="400" height="400" viewBox="0 0 400 400">
+    <!-- 磅秤外框 -->
+    <circle cx="200" cy="200" r="190" fill="#ffffff" stroke="#333" stroke-width="2"/>
+    
+    <!-- 刻度與數字群組 -->
+    <g id="ticks"></g>
+    
+    <!-- 紅色指針群組 -->
+    <g id="pointer-group" transform="rotate(0 200 200)">
+      <polygon points="185,200 215,200 200,45" fill="#e74c3c" />
+      <circle cx="200" cy="200" r="15" fill="#c0392b"/>
+      <circle cx="200" cy="200" r="4" fill="#111"/>
+    </g>
+  </svg>
+
+  <br>
+  <!-- 確定按鈕 -->
+  <button id="confirm-btn">確定 (開始讀秤)</button>
+
+  <div class="hint">👆 教師請先用滑鼠拖曳指針出題</div>
+
+  <!-- 答案顯示區 -->
+  <div id="weight-display">
+    <span id="grams-text">0 公克</span>
+    <span id="kg-text" class="conversion" style="display: none;">0 公斤 0 公克</span>
+  </div>
+</div>
+
+<script>
+  const ticksGroup = document.getElementById('ticks');
+  const pointerGroup = document.getElementById('pointer-group');
+  const gramsText = document.getElementById('grams-text');
+  const kgText = document.getElementById('kg-text');
+  const scaleSvg = document.getElementById('scale-svg');
+  const confirmBtn = document.getElementById('confirm-btn');
+  const displayDiv = document.getElementById('weight-display');
+
+  const cx = 200, cy = 200, radius = 180;
+  let currentWeight = 0; 
+  let isDragging = false;
+  let isAnimating = false; 
+  let lastHighlightedLine = null;
+
+  // 1. 產生刻度與標示 (0 到 1000g)
+  for (let i = 0; i < 1000; i += 10) {
+    let angle = (i / 1000) * 360 - 90;
+    let radians = angle * (Math.PI / 180);
+    
+    let is50g = (i % 50 === 0);
+    let isQuarter = (i % 250 === 0); // 0, 250, 500, 750
+    
+    let tickLength = isQuarter ? 25 : (is50g ? 15 : 8);
+    let strokeWidth = isQuarter ? 3 : (is50g ? 2 : 1.5);
+    let strokeColor = "#333"; // 取消紅色，全部統一為深色刻度
+    
+    let x1 = cx + Math.cos(radians) * radius;
+    let y1 = cy + Math.sin(radians) * radius;
+    let x2 = cx + Math.cos(radians) * (radius - tickLength);
+    let y2 = cy + Math.sin(radians) * (radius - tickLength);
+    
+    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("id", "tick-" + i); 
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", strokeColor);
+    line.setAttribute("stroke-width", strokeWidth);
+    
+    // 記錄原始屬性以利復原
+    line.dataset.origColor = strokeColor;
+    line.dataset.origWidth = strokeWidth;
+    
+    ticksGroup.appendChild(line);
+
+    if (is50g) {
+      let textRadius = isQuarter ? radius - 45 : radius - 35;
+      let tx = cx + Math.cos(radians) * textRadius;
+      let ty = cy + Math.sin(radians) * textRadius;
+      
+      let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      
+      if (i === 0) {
+        text.setAttribute("x", cx);
+        text.setAttribute("y", cy - textRadius + 10);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-size", "22px");
+        text.setAttribute("font-weight", "bold");
+        text.innerHTML = `<tspan x="${cx}" dy="-10">0</tspan><tspan x="${cx}" dy="24">1000g</tspan>`;
+      } else {
+        text.setAttribute("x", tx);
+        text.setAttribute("y", ty + 6); 
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-size", isQuarter ? "24px" : "14px");
+        text.setAttribute("font-weight", isQuarter ? "bold" : "normal");
+        text.setAttribute("fill", "#2c3e50");
+        text.textContent = i;
+      }
+      ticksGroup.appendChild(text);
+    }
+  }
+
+  // 2. 指針拖曳與重量計算
+  function calculateAngleAndWeight(clientX, clientY) {
+    const rect = scaleSvg.getBoundingClientRect();
+    const x = clientX - (rect.left + rect.width / 2);
+    const y = clientY - (rect.top + rect.height / 2);
+    
+    let angleRad = Math.atan2(y, x);
+    let angleDeg = angleRad * (180 / Math.PI) + 90;
+    if (angleDeg < 0) angleDeg += 360;
+
+    let weight = (angleDeg / 360) * 1000;
+    weight = Math.round(weight / 10) * 10; 
+    if (weight === 1000) weight = 0; 
+
+    return { weight, angleDeg: (weight / 1000) * 360 };
+  }
+
+  function clearHighlight() {
+    if (lastHighlightedLine) {
+      lastHighlightedLine.setAttribute("stroke", lastHighlightedLine.dataset.origColor);
+      lastHighlightedLine.setAttribute("stroke-width", lastHighlightedLine.dataset.origWidth);
+      lastHighlightedLine = null;
+    }
+  }
+
+  function updatePointer(e) {
+    if (!isDragging || isAnimating) return; 
+    e.preventDefault(); 
+    
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
+
+    const { weight, angleDeg } = calculateAngleAndWeight(clientX, clientY);
+    
+    displayDiv.style.opacity = '0';
+    displayDiv.style.visibility = 'hidden';
+    clearHighlight();
+    
+    currentWeight = (weight === 0 && angleDeg > 350) ? 1000 : weight;
+    pointerGroup.setAttribute("transform", `rotate(${angleDeg} 200 200)`);
+  }
+
+  scaleSvg.addEventListener('mousedown', (e) => { 
+    if(!isAnimating) { isDragging = true; updatePointer(e); }
+  });
+  window.addEventListener('mousemove', updatePointer);
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  
+  scaleSvg.addEventListener('touchstart', (e) => { 
+    if(!isAnimating) { isDragging = true; updatePointer(e); }
+  }, {passive: false});
+  window.addEventListener('touchmove', updatePointer, {passive: false});
+  window.addEventListener('touchend', () => { isDragging = false; });
+
+  // 3. 語音唱數與動畫邏輯
+  const synth = window.speechSynthesis;
+  
+  function speakNumber(num) {
+    if (synth.speaking) synth.cancel(); 
+    let utterance = new SpeechSynthesisUtterance(num.toString());
+    utterance.lang = 'zh-TW';
+    utterance.rate = 1.2; 
+    synth.speak(utterance);
+  }
+
+  function highlightTick(weight) {
+    clearHighlight(); 
+    // 處理滿 1000g 時對應的是 0g 的刻度線
+    let targetId = weight === 1000 ? 0 : weight;
+    let line = document.getElementById("tick-" + targetId);
+    if (line) {
+      line.setAttribute("stroke", "#3498db"); // 只改變顏色，不改變粗細
+      lastHighlightedLine = line; 
+    }
+  }
+
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
+  confirmBtn.addEventListener('click', async () => {
+    if (isAnimating) return;
+    
+    if (currentWeight === 0) {
+      showFinalAnswer();
+      return;
+    }
+
+    isAnimating = true;
+    confirmBtn.disabled = true; 
+    
+    let target = currentWeight;
+    let fifties = Math.floor(target / 50);  // 1公斤秤的大格為 50g
+    let tens = (target % 50) / 10;          // 剩下的以 10g 為單位
+    
+    // 第一階段：每 50g 唱數與線條標色
+    for (let i = 1; i <= fifties; i++) {
+        let w = i * 50;
+        highlightTick(w);
+        speakNumber(w);
+        await delay(700); 
+    }
+    
+    // 第二階段：剩下的每 10g 唱數與線條標色
+    for (let i = 1; i <= tens; i++) {
+        let w = fifties * 50 + i * 10;
+        highlightTick(w);
+        speakNumber(w);
+        await delay(700); 
+    }
+    
+    clearHighlight();
+    showFinalAnswer();
+    
+    isAnimating = false;
+    confirmBtn.disabled = false;
+  });
+
+  // 4. 顯示答案
+  function showFinalAnswer() {
+    if (currentWeight === 1000) {
+      gramsText.innerHTML = `1<span class="underline-blue">000</span> 公克`;
+      kgText.style.display = "block";
+      kgText.textContent = `1 公斤 0 公克`;
+    } else {
+      gramsText.innerHTML = `${currentWeight} 公克`;
+      kgText.style.display = "none";
+    }
+    
+    displayDiv.style.visibility = 'visible';
+    displayDiv.style.opacity = '1';
+    
+    let finalSpeakText = kgText.style.display === "block" ? kgText.textContent : gramsText.textContent;
+    speakNumber(finalSpeakText); 
+  }
+
+</script>
+
+</body>
+</html>
