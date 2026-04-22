@@ -135,29 +135,34 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            flex-wrap: nowrap; /* 強制不換行，確保全在同一列 */
+            gap: 10px; /* 微調間距 */
             margin-top: 25px;
             margin-bottom: 20px;
+            width: 100%;
+            overflow-x: auto; /* 若螢幕太窄，允許橫向滑動 */
+            padding-bottom: 5px;
         }
         .top-formula.basic-mode-bar .formula-label {
-            font-size: 32px; /* 再次放大 */
+            font-size: 28px; /* 微調字體以適應螢幕 */
             color: #333;
+            white-space: nowrap; /* 強制文字不換行 */
         }
         .top-formula.basic-mode-bar .formula-operator {
-            font-size: 40px; /* 等號放大 */
+            font-size: 36px;
         }
         .top-formula.basic-mode-bar input[type="number"].val-input {
-            width: 110px;
-            height: 64px;
-            font-size: 40px; /* 輸入框字體放大 */
+            width: 80px;
+            height: 56px;
+            font-size: 36px; 
+            flex-shrink: 0; /* 避免框框被擠壓變形 */
         }
         
         /* 基礎概念：同行填答輸入框 */
         .basic-inline-answer {
-            font-size: 40px;
-            width: 180px; 
-            height: 64px;
+            font-size: 36px;
+            width: 140px; 
+            height: 56px;
             text-align: center;
             border: 3px dashed #ff5722;
             border-radius: 8px;
@@ -167,6 +172,7 @@
             box-sizing: border-box;
             outline: none;
             transition: all 0.2s;
+            flex-shrink: 0; /* 避免解答框被擠壓變形 */
         }
         .basic-inline-answer:focus {
             border-style: solid;
