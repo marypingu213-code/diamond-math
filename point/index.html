@@ -138,25 +138,26 @@
             flex-wrap: wrap;
             gap: 15px;
             margin-top: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .top-formula.basic-mode-bar .formula-label {
-            font-size: 26px; /* 字體放大 */
+            font-size: 32px; /* 再次放大 */
             color: #333;
         }
         .top-formula.basic-mode-bar .formula-operator {
-            font-size: 32px; /* 等號放大 */
+            font-size: 40px; /* 等號放大 */
         }
         .top-formula.basic-mode-bar input[type="number"].val-input {
-            width: 100px;
-            height: 56px;
-            font-size: 32px; /* 輸入框字體放大 */
+            width: 110px;
+            height: 64px;
+            font-size: 40px; /* 輸入框字體放大 */
         }
-        /* 基礎概念填答輸入框 */
-        .result-input {
-            font-size: 32px;
-            width: 140px; /* 固定寬度，避免掉到下一行 */
-            height: 56px;
+        
+        /* 基礎概念：同行填答輸入框 */
+        .basic-inline-answer {
+            font-size: 40px;
+            width: 180px; 
+            height: 64px;
             text-align: center;
             border: 3px dashed #ff5722;
             border-radius: 8px;
@@ -164,18 +165,17 @@
             color: #d84315;
             font-weight: bold;
             box-sizing: border-box;
-            padding: 0 10px;
             outline: none;
             transition: all 0.2s;
         }
-        .result-input:focus {
+        .basic-inline-answer:focus {
             border-style: solid;
             box-shadow: 0 0 8px rgba(255, 87, 34, 0.5);
             background-color: #fff;
         }
         /* 隱藏填答框的上下箭頭，讓畫面更乾淨 */
-        .result-input::-webkit-outer-spin-button,
-        .result-input::-webkit-inner-spin-button {
+        .basic-inline-answer::-webkit-outer-spin-button,
+        .basic-inline-answer::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
@@ -518,8 +518,8 @@
         <input type="number" id="basic-val2" class="val-input" value="14" step="1" min="0">
         <div class="formula-label">個 0.1 條合起來是</div>
         <div class="formula-operator">=</div>
-        <!-- 改為可輸入的文字框，並在原本的位置 -->
-        <input type="number" class="result-input" id="basic-result-input" placeholder="?">
+        <!-- 解答區放回題目後方 -->
+        <input type="number" class="basic-inline-answer" id="basic-result-input">
     </div>
 
     <!-- 下方主要版面 -->
