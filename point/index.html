@@ -95,6 +95,7 @@
             grid-template-columns: 120px 30px 120px 30px 120px; 
             align-items: center;
             justify-items: center;
+            justify-content: center; /* 新增：讓整個算式區塊置中 */
             gap: 10px 15px;
             margin-bottom: 20px;
         }
@@ -123,7 +124,7 @@
             justify-content: center;
             border: 2px dashed #ff5722;
             border-radius: 6px;
-            background-color: #fff3e0;
+            background-color: white; /* 變更：底色改為白色 */
             color: #d84315;
             font-weight: bold;
             box-sizing: border-box;
@@ -152,8 +153,8 @@
             margin: 0 4px;
         }
         .top-formula.basic-mode-bar input[type="number"].val-input {
-            width: 70px; /* 縮小輸入框寬度 */
-            height: 48px; /* 配合字體縮小高度 */
+            width: 70px; /* 前面輸入框寬度 */
+            height: 48px; /* 前面輸入框高度 */
             font-size: 28px; 
             border: 2px solid #ccc;
             border-radius: 6px;
@@ -164,12 +165,12 @@
         /* 基礎概念：同行填答輸入框 */
         .basic-inline-answer {
             font-size: 28px; 
-            width: 90px;     /* 大幅縮小解答框寬度，讓版面更緊湊 */
-            height: 48px;    /* 高度配合題目輸入框 */
+            width: 70px;     /* 與前面輸入框完全一樣寬 */
+            height: 48px;    /* 與前面輸入框完全一樣高 */
             text-align: center;
             border: 2px dashed #ff5722; 
             border-radius: 6px;         
-            background-color: #fff3e0;
+            background-color: white; 
             color: #d84315;
             font-weight: bold;
             box-sizing: border-box;
