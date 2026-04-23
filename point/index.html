@@ -136,26 +136,25 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap; /* 修正：改為允許換行，螢幕再小都不會被切掉 */
+            flex-wrap: nowrap; /* 既然沒有手機需求，強制不換行，確保算式完美排成一直線 */
             gap: 8px; 
             margin-top: 20px;
             margin-bottom: 25px;
             width: 100%;
-            /* 移除 white-space: nowrap; 避免強制撐開螢幕 */
+            white-space: nowrap; /* 確保文字絕對不換行 */
         }
         .top-formula.basic-mode-bar .formula-label {
             font-size: 24px; 
             color: #333;
             margin: 0;
-            white-space: nowrap; /* 確保單一段文字方塊不會自己斷行 */
         }
         .top-formula.basic-mode-bar .formula-operator {
             font-size: 32px;
             margin: 0 4px;
         }
         .top-formula.basic-mode-bar input[type="number"].val-input {
-            width: 70px; /* 前面輸入框寬度 */
-            height: 48px; 
+            width: 70px !important; /* 加入 !important 強制覆蓋全域 100% 設定 */
+            height: 48px !important; 
             font-size: 28px; 
             border: 2px solid #ccc;
             border-radius: 6px;
@@ -164,10 +163,10 @@
         }
         
         /* 基礎概念：同行填答輸入框 */
-        .basic-inline-answer {
+        input[type="number"].basic-inline-answer {
             font-size: 28px; 
-            width: 70px;     /* 與前面輸入框完全一樣寬 */
-            height: 48px;    /* 與前面輸入框完全一樣高 */
+            width: 70px !important;  /* 與前面輸入框完全一樣寬 */
+            height: 48px !important; /* 與前面輸入框完全一樣高 */
             text-align: center;
             border: 2px dashed #ff5722; 
             border-radius: 6px;         
