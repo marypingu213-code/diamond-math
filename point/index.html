@@ -131,22 +131,23 @@
             padding: 0 10px;
         }
 
-        /* ====== 基礎概念模式專用橫排樣式 (緊湊、強制單行) ====== */
+        /* ====== 基礎概念模式專用橫排樣式 ====== */
         .top-formula.basic-mode-bar {
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: nowrap; /* 強制不換行，完美排成一列 */
-            gap: 8px; /* 縮小元素間的間距 */
+            flex-wrap: wrap; /* 修正：改為允許換行，螢幕再小都不會被切掉 */
+            gap: 8px; 
             margin-top: 20px;
             margin-bottom: 25px;
             width: 100%;
-            white-space: nowrap; /* 確保文字絕對不換行 */
+            /* 移除 white-space: nowrap; 避免強制撐開螢幕 */
         }
         .top-formula.basic-mode-bar .formula-label {
-            font-size: 24px; /* 稍微縮小字體以適應單行排版 */
+            font-size: 24px; 
             color: #333;
             margin: 0;
+            white-space: nowrap; /* 確保單一段文字方塊不會自己斷行 */
         }
         .top-formula.basic-mode-bar .formula-operator {
             font-size: 32px;
@@ -154,7 +155,7 @@
         }
         .top-formula.basic-mode-bar input[type="number"].val-input {
             width: 70px; /* 前面輸入框寬度 */
-            height: 48px; /* 前面輸入框高度 */
+            height: 48px; 
             font-size: 28px; 
             border: 2px solid #ccc;
             border-radius: 6px;
