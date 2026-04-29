@@ -39,6 +39,29 @@
             box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
         }
 
+        /* ====== 自動出題按鈕 ====== */
+        .auto-btn {
+            font-size: 22px;
+            padding: 12px 25px;
+            border: 3px solid #4CAF50;
+            border-radius: 10px;
+            background-color: #E8F5E9;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2E7D32;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-left: 20px;
+        }
+        .auto-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+        }
+        .auto-btn:active {
+            transform: scale(0.95);
+        }
+
         /* ====== 操作提示 ====== */
         .hint-text {
             text-align: center;
@@ -119,16 +142,27 @@
             width: 100%;
             min-width: 120px;
             height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: center; /* 變更：改為適合 input 的文字置中 */
             border: 2px dashed #ff5722;
             border-radius: 6px;
-            background-color: white; /* 變更：底色改為白色 */
+            background-color: white; 
             color: #d84315;
             font-weight: bold;
             box-sizing: border-box;
             padding: 0 10px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .result-box:focus {
+            border-style: solid;
+            box-shadow: 0 0 8px rgba(255, 87, 34, 0.5);
+            background-color: #fff;
+        }
+        /* 隱藏填答框的上下箭頭 */
+        .result-box::-webkit-outer-spin-button,
+        .result-box::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         /* ====== 基礎概念模式專用橫排樣式 ====== */
@@ -495,6 +529,8 @@
         <button class="mode-tab active" id="tab-basic" onclick="setMode('basic')">基礎概念</button>
         <button class="mode-tab" id="tab-add" onclick="setMode('add')">小數加法</button>
         <button class="mode-tab" id="tab-sub" onclick="setMode('sub')">小數減法</button>
+        <!-- 新增：自動出題按鈕 -->
+        <button class="auto-btn" onclick="generateQuestion()">🎲 自動出題</button>
     </div>
 
     <!-- 提示區 -->
@@ -519,7 +555,8 @@
         <div class="formula-operator" id="operator">+</div>
         <input type="number" id="val2" value="0.6" step="0.1" min="0">
         <div class="formula-operator">=</div>
-        <div class="result-box" id="math-result"></div> 
+        <!-- 變更：將原本的 div 改為可填寫的 input -->
+        <input type="number" class="result-box" id="math-result"> 
     </div>
 
     <!-- 上方橫式輸入區：基礎概念模式 -->
@@ -733,7 +770,7 @@
         }
 
         function resetResult() {
-            mathResult.textContent = '';
+            if (mathResult) mathResult.value = ''; // 變更：改為清空 input 的 value
             if (basicResultInput) basicResultInput.value = ''; // 清空填答框
             dispBResult.textContent = '?';
             updateVerticalMath(false);
@@ -1082,6 +1119,47 @@
             }
         }
 
+        // ====== 自動出題邏輯 ======
+        function generateQuestion() {
+            if (isAnimating) { 
+                showToast("動畫進行中，請稍候再出題！"); 
+                return; 
+            }
+
+            if (mode === 'basic') {
+                // 基礎：產生必定需要進位的題目
+                const b1 = Math.floor(Math.random() * 4) + 1; // 產生 1~4
+                const b2 = Math.floor(Math.random() * 15) + 11; // 產生 11~25 (確保一定大於10，需合10)
+                basicVal1Input.value = b1;
+                basicVal2Input.value = b2;
+            } else if (mode === 'add') {
+                // 加法：必定進位
+                const dec1 = Math.floor(Math.random() * 6) + 4; // 產生 4~9
+                const minDec2 = 10 - dec1; // 確保相加一定超過 10
+                const dec2 = Math.floor(Math.random() * (9 - minDec2 + 1)) + minDec2; 
+
+                const int1 = Math.floor(Math.random() * 4) + 1; // 產生 1~4
+                const int2 = Math.floor(Math.random() * 3); // 產生 0~2
+
+                val1Input.value = `${int1}.${dec1}`;
+                val2Input.value = `${int2}.${dec2}`;
+            } else if (mode === 'sub') {
+                // 減法：必定退位
+                const dec1 = Math.floor(Math.random() * 7) + 1; // 產生 1~7
+                const dec2 = Math.floor(Math.random() * (9 - (dec1 + 1) + 1)) + (dec1 + 1); // 確保減數的小數 > 被減數的小數
+
+                const int1 = Math.floor(Math.random() * 4) + 2; // 產生 2~5
+                const int2 = Math.floor(Math.random() * (int1 - 1)); // 確保不夠減時借位夠扣
+
+                val1Input.value = `${int1}.${dec1}`;
+                val2Input.value = `${int2}.${dec2}`;
+            }
+
+            resetResult();
+            updateBlocksFromInput();
+            showToast("🎲 新題目來囉！試著操作看看吧。");
+        }
+
         // ====== 全局事件監聽 ======
         submitBtn.addEventListener('click', () => {
             if (isAnimating) { showToast("動畫進行中，請稍候！"); return; }
@@ -1113,7 +1191,22 @@
             if (mode === 'add') gatherRemainingBlocks();
 
             let result = mode === 'add' ? Math.round((v1 + v2) * 10) / 10 : Math.round((v1 - v2) * 10) / 10;
-            mathResult.textContent = result;
+            
+            // 變更：為小數加減法新增填答對錯回饋
+            const studentMathAns = parseFloat(mathResult.value);
+            if (!isNaN(studentMathAns)) {
+                if (studentMathAns === result) {
+                    showToast("答對了！🎉");
+                } else {
+                    if (mode === 'add') {
+                        showToast(`答案不太對喔，再看看掉下來的積木！`);
+                    } else {
+                        showToast(`答案不太對喔，再數數看剩下的積木！`);
+                    }
+                }
+            }
+            
+            mathResult.value = result; // 變更：將正確答案寫回 input 的 value 中
             updateVerticalMath(true, result);
         });
 
