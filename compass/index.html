@@ -31,9 +31,9 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-3">互動方格畫圓</h1>
         <div class="inline-block text-left bg-white p-4 rounded-lg shadow-sm border border-gray-200">
             <p class="text-gray-700 text-sm mb-1">1. 點擊並按住直線交會處設定<strong class="text-black">圓心</strong>。</p>
-            <p class="text-gray-700 text-sm mb-1">2. 往上下左右拖拉設定<strong class="text-blue-500">半徑</strong>（會顯示數值）。</p>
+            <p class="text-gray-700 text-sm mb-1">2. 往外拖拉設定<strong class="text-blue-500">半徑</strong>（<strong class="text-orange-500">任務挑戰模式</strong>會隱藏長度提示喔！）。</p>
             <p class="text-gray-700 text-sm mb-1">3. 放開後，等待 <strong class="text-red-500">5 秒</strong>將從<strong class="text-blue-600">拖拉結束處</strong>開始畫圓。</p>
-            <p class="text-gray-700 text-sm">4. 畫完後<strong class="text-red-600">畫布會鎖定</strong>，請看著圖形完成旁邊的測驗！</p>
+            <p class="text-gray-700 text-sm">4. 利用右側面板切換「自由探索」或「任務挑戰」模式學習！</p>
         </div>
     </div>
 
@@ -41,75 +41,123 @@
     <div class="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 w-full max-w-5xl">
         
         <!-- 左側：畫布區 -->
-        <div class="relative flex justify-center items-center w-full lg:w-auto shrink-0">
+        <div id="canvasContainer" class="relative flex justify-center items-center w-full lg:w-2/3 shrink-0">
             <canvas id="gridCanvas"></canvas>
         </div>
         
-        <!-- 右側：測驗題面板 -->
-        <div id="quizPanel" class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg border-2 border-gray-200 relative overflow-hidden transition-all duration-500">
+        <!-- 右側：測驗題/挑戰 面板 -->
+        <div id="quizPanel" class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border-2 border-gray-200 relative overflow-hidden transition-all duration-500">
             
-            <!-- 測驗未解鎖時的遮罩 -->
-            <div id="quizDisabledOverlay" class="absolute inset-0 bg-gray-50 bg-opacity-95 z-20 flex flex-col items-center justify-center backdrop-blur-[2px] transition-opacity duration-500">
-                <span class="text-5xl mb-4">📐</span>
-                <span class="text-gray-600 font-bold text-xl">請先完成畫圓</span>
-                <span class="text-gray-400 text-sm mt-2">畫完後測驗就會解鎖喔！</span>
+            <!-- 模式切換 Tabs -->
+            <div class="flex p-1 space-x-1 bg-gray-200 rounded-xl mb-6 relative z-30">
+                <button id="tabExplore" onclick="switchMode('explore')" class="w-full py-2.5 text-sm font-bold rounded-lg shadow bg-white text-blue-600 transition-all">自由探索</button>
+                <button id="tabChallenge" onclick="switchMode('challenge')" class="w-full py-2.5 text-sm font-bold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-300 transition-all">任務挑戰</button>
             </div>
 
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">🤔 動動腦時間</h2>
-            <p class="text-gray-600 mb-6 font-medium bg-yellow-50 inline-block px-3 py-1 rounded text-sm">💡 假設方格紙的 1 格是 1 公分</p>
-            
-            <div class="space-y-5 text-left bg-blue-50/50 p-5 rounded-lg border border-blue-100">
-                <div class="flex items-center justify-between">
-                    <label class="font-bold text-gray-700 text-lg">考題 1：半徑是？</label>
-                    <div class="flex items-center">
-                        <div class="flex border-2 border-gray-300 rounded-lg overflow-hidden shadow-inner h-12 w-24 bg-white">
-                            <input type="number" id="ansRadius" value="0" readonly class="w-full text-center text-xl font-bold text-blue-600 focus:outline-none bg-transparent m-0 border-none cursor-default">
-                            <div class="flex flex-col border-l-2 border-gray-300 w-8 shrink-0 bg-gray-100">
-                                <button type="button" onclick="changeValue('ansRadius', 1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors border-b-2 border-gray-300 text-[10px]">▲</button>
-                                <button type="button" onclick="changeValue('ansRadius', -1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors text-[10px]">▼</button>
-                            </div>
-                        </div>
-                        <span class="ml-2 text-gray-600 font-bold">cm</span>
-                    </div>
+            <!-- ================== 模式 1：自由探索 UI ================== -->
+            <div id="exploreUI" class="relative">
+                <!-- 測驗未解鎖時的遮罩 -->
+                <div id="quizDisabledOverlay" class="absolute inset-0 bg-white bg-opacity-95 z-20 flex flex-col items-center justify-center backdrop-blur-[2px] transition-opacity duration-500">
+                    <span class="text-5xl mb-4">📐</span>
+                    <span class="text-gray-600 font-bold text-xl">請先完成畫圓</span>
+                    <span class="text-gray-400 text-sm mt-2">畫完後測驗就會解鎖喔！</span>
                 </div>
-                <div class="flex items-center justify-between">
-                    <label class="font-bold text-gray-700 text-lg">考題 2：直徑是？</label>
-                    <div class="flex items-center">
-                        <div class="flex border-2 border-gray-300 rounded-lg overflow-hidden shadow-inner h-12 w-24 bg-white">
-                            <input type="number" id="ansDiameter" value="0" readonly class="w-full text-center text-xl font-bold text-blue-600 focus:outline-none bg-transparent m-0 border-none cursor-default">
-                            <div class="flex flex-col border-l-2 border-gray-300 w-8 shrink-0 bg-gray-100">
-                                <button type="button" onclick="changeValue('ansDiameter', 1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors border-b-2 border-gray-300 text-[10px]">▲</button>
-                                <button type="button" onclick="changeValue('ansDiameter', -1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors text-[10px]">▼</button>
-                            </div>
-                        </div>
-                        <span class="ml-2 text-gray-600 font-bold">cm</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- 回饋與概念區塊 (設定最低高度避免畫面跳動) -->
-            <div class="mt-4 min-h-[72px] flex flex-col items-center justify-start w-full">
-                <div id="quizFeedback" class="h-6 text-sm font-bold text-center flex items-center justify-center w-full"></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">🤔 動動腦時間</h2>
+                <p class="text-gray-600 mb-6 font-medium bg-yellow-50 inline-block px-3 py-1 rounded text-sm">💡 假設方格紙的 1 格是 1 公分</p>
                 
-                <!-- 概念複習區塊 -->
-                <div id="mathConcept" class="hidden mt-2 text-center text-[15px] font-bold text-gray-800 bg-green-100 py-1.5 px-4 rounded-lg border border-green-300 shadow-sm w-[95%] max-w-[280px]">
-                    <span class="text-blue-700">半徑</span> &times; 2 = <span class="text-green-700">直徑</span>
-                    <span class="mx-1 text-gray-400">|</span>
-                    <span class="text-green-700">直徑</span> &divide; 2 = <span class="text-blue-700">半徑</span>
+                <div class="space-y-5 text-left bg-blue-50/50 p-5 rounded-lg border border-blue-100">
+                    <div class="flex items-center justify-between">
+                        <label class="font-bold text-gray-700 text-lg">考題 1：半徑是？</label>
+                        <div class="flex items-center">
+                            <div class="flex border-2 border-gray-300 rounded-lg overflow-hidden shadow-inner h-12 w-24 bg-white">
+                                <input type="number" id="ansRadius" value="0" readonly class="w-full text-center text-xl font-bold text-blue-600 focus:outline-none bg-transparent m-0 border-none cursor-default">
+                                <div class="flex flex-col border-l-2 border-gray-300 w-8 shrink-0 bg-gray-100">
+                                    <button type="button" onclick="changeValue('ansRadius', 1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors border-b-2 border-gray-300 text-[10px]">▲</button>
+                                    <button type="button" onclick="changeValue('ansRadius', -1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors text-[10px]">▼</button>
+                                </div>
+                            </div>
+                            <span class="ml-2 text-gray-600 font-bold">cm</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="font-bold text-gray-700 text-lg">考題 2：直徑是？</label>
+                        <div class="flex items-center">
+                            <div class="flex border-2 border-gray-300 rounded-lg overflow-hidden shadow-inner h-12 w-24 bg-white">
+                                <input type="number" id="ansDiameter" value="0" readonly class="w-full text-center text-xl font-bold text-blue-600 focus:outline-none bg-transparent m-0 border-none cursor-default">
+                                <div class="flex flex-col border-l-2 border-gray-300 w-8 shrink-0 bg-gray-100">
+                                    <button type="button" onclick="changeValue('ansDiameter', 1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors border-b-2 border-gray-300 text-[10px]">▲</button>
+                                    <button type="button" onclick="changeValue('ansDiameter', -1)" class="flex-1 flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 text-gray-700 focus:outline-none transition-colors text-[10px]">▼</button>
+                                </div>
+                            </div>
+                            <span class="ml-2 text-gray-600 font-bold">cm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 回饋與概念區塊 (設定最低高度避免畫面跳動) -->
+                <div class="mt-4 min-h-[72px] flex flex-col items-center justify-start w-full">
+                    <div id="quizFeedback" class="h-6 text-sm font-bold text-center flex items-center justify-center w-full"></div>
+                    
+                    <!-- 概念複習區塊 -->
+                    <div id="mathConcept" class="hidden mt-2 text-center text-[15px] font-bold text-gray-800 bg-green-100 py-1.5 px-4 rounded-lg border border-green-300 shadow-sm w-[95%] max-w-[280px]">
+                        <span class="text-blue-700">半徑</span> &times; 2 = <span class="text-green-700">直徑</span>
+                        <span class="mx-1 text-gray-400">|</span>
+                        <span class="text-green-700">直徑</span> &divide; 2 = <span class="text-blue-700">半徑</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-center gap-3">
+                    <button id="checkBtn" onclick="checkAnswers()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors text-lg flex items-center justify-center gap-2">
+                        <span>送出答案</span>
+                    </button>
+                    <button id="resetBtn" onclick="resetExplore()" class="hidden w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors text-lg flex items-center justify-center gap-2">
+                        <span>重新畫圓</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-center gap-3">
-                <button id="checkBtn" onclick="checkAnswers()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors text-lg flex items-center justify-center gap-2">
-                    <span>送出答案</span>
-                </button>
-                <button id="resetBtn" onclick="resetApp()" class="hidden w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors text-lg flex items-center justify-center gap-2">
-                    <span>重新畫圓</span>
+            <!-- ================== 模式 2：任務挑戰 UI ================== -->
+            <div id="challengeUI" class="hidden flex flex-col items-center">
+                <div class="w-full text-center bg-orange-50 p-6 rounded-xl border-2 border-orange-200 mb-2 shadow-inner">
+                    <h3 class="text-orange-800 font-bold mb-3 flex items-center justify-center gap-2 text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        任務目標
+                    </h3>
+                    <p id="challengePrompt" class="text-2xl font-bold text-gray-800">請畫出...</p>
+                    
+                    <!-- 新增：挑戰模式漸進式提示區塊 -->
+                    <div id="challengeHintContainer" class="hidden w-full mt-4 flex flex-col items-center">
+                        <button id="hintBtn" onclick="showHint()" class="text-blue-600 bg-blue-100 hover:bg-blue-200 border border-blue-300 font-bold py-1.5 px-4 rounded-full shadow-sm transition-colors text-sm flex items-center gap-1">
+                            💡 提示
+                        </button>
+                        <div id="hintText" class="hidden mt-3 text-sm text-gray-700 bg-white p-3 rounded-lg border border-yellow-300 shadow-sm w-full text-center font-medium leading-relaxed">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 挑戰回饋區與概念複習區塊 -->
+                <div class="min-h-[100px] flex flex-col items-center justify-start w-full mt-2">
+                    <div id="challengeFeedback" class="text-center w-full">準備好就按住左邊的交會點開始畫吧！</div>
+                    
+                    <div id="challengeConcept" class="hidden mt-3 text-center text-[15px] font-bold text-gray-800 bg-green-100 py-1.5 px-4 rounded-lg border border-green-300 shadow-sm w-[95%] max-w-[280px]">
+                        <span class="text-blue-700">半徑</span> &times; 2 = <span class="text-green-700">直徑</span>
+                        <span class="mx-1 text-gray-400">|</span>
+                        <span class="text-green-700">直徑</span> &divide; 2 = <span class="text-blue-700">半徑</span>
+                    </div>
+                </div>
+
+                <button id="nextChallengeBtn" onclick="generateChallenge()" class="hidden w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors text-lg mt-2 flex items-center justify-center gap-2">
+                    <span>再挑戰一題！</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
+
         </div>
     </div>
 
@@ -125,43 +173,169 @@
 
         // 應用程式狀態
         const state = {
+            mode: 'explore',    // 'explore' 或 'challenge'
             center: null,       
             radius: 0,          
             isDragging: false,
             dragPixelPos: null, 
-            phase: 'idle',      // 'idle', 'dragging', 'waiting', 'drawing', 'quiz'
+            phase: 'idle',      // 'idle', 'dragging', 'waiting', 'drawing', 'quiz'(locked)
             timeLeft: 5,        
             startAngle: 0,      
-            drawAngle: 0        
+            drawAngle: 0,
+            
+            // 挑戰模式狀態
+            challengeTargetR: 0,
+            challengeType: 'radius',
+            challengeTargetVal: 0,
+            challengeEvaluated: false,
+            hintLevel: 0        // 新增：提示層級 (0:無提示, 1:第一階, 2:第二階)
         };
 
         let timerId = null;
         let countdownInterval = null;
         let animationFrameId = null;
 
-        // 初始化與響應式調整大小
-        function resizeCanvas() {
-            // 判斷是否為寬螢幕 (桌機/平板橫式)
-            const isDesktop = window.innerWidth >= 1024;
-            // 如果是寬螢幕，要扣掉右邊測驗題面板的寬度(約400px)；手機版則滿版
-            const availableWidth = isDesktop ? (window.innerWidth - 450) : (window.innerWidth - 32);
+        // ================== 切換模式與初始化 ==================
+        function switchMode(newMode) {
+            state.mode = newMode;
+            const tabExplore = document.getElementById('tabExplore');
+            const tabChallenge = document.getElementById('tabChallenge');
+            const uiExplore = document.getElementById('exploreUI');
+            const uiChallenge = document.getElementById('challengeUI');
+            const panel = document.getElementById('quizPanel');
+
+            if (newMode === 'explore') {
+                tabExplore.className = "w-full py-2.5 text-sm font-bold rounded-lg shadow bg-white text-blue-600 transition-all";
+                tabChallenge.className = "w-full py-2.5 text-sm font-bold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-300 transition-all";
+                uiExplore.classList.remove('hidden');
+                uiChallenge.classList.add('hidden');
+                panel.classList.replace('border-orange-400', 'border-gray-200');
+                panel.classList.replace('border-blue-400', 'border-gray-200');
+                panel.classList.remove('ring-4', 'ring-orange-100', 'ring-blue-100');
+                resetExplore();
+            } else {
+                tabChallenge.className = "w-full py-2.5 text-sm font-bold rounded-lg shadow bg-white text-orange-600 transition-all";
+                tabExplore.className = "w-full py-2.5 text-sm font-bold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-300 transition-all";
+                uiExplore.classList.add('hidden');
+                uiChallenge.classList.remove('hidden');
+                panel.classList.replace('border-blue-400', 'border-gray-200');
+                panel.classList.replace('border-gray-200', 'border-orange-400');
+                panel.classList.add('ring-4', 'ring-orange-100');
+                generateChallenge();
+            }
+        }
+
+        // ================== 挑戰模式邏輯 ==================
+        function generateChallenge() {
+            resetCanvas(); // 先清空畫布
+            state.challengeEvaluated = false;
+            state.hintLevel = 0; // 重置提示層級
             
-            // 限制最大為 550px，確保不管怎樣都不會過大
-            const maxSize = Math.min(availableWidth, window.innerHeight - 200, 550);
+            // 隨機產生半徑 2 ~ 7 (確保能在畫布內畫出來)
+            state.challengeTargetR = Math.floor(Math.random() * 6) + 2; 
+            // 隨機決定考半徑還是直徑
+            state.challengeType = Math.random() > 0.5 ? 'radius' : 'diameter';
+            state.challengeTargetVal = state.challengeType === 'radius' ? state.challengeTargetR : state.challengeTargetR * 2;
+            
+            const typeStr = state.challengeType === 'radius' ? '半徑' : '直徑';
+            document.getElementById('challengePrompt').innerHTML = `${typeStr} <span class="text-blue-700">${state.challengeTargetVal}</span> cm 的圓`;
+            
+            // 處理提示區塊：只有考「直徑」時才顯示提示按鈕
+            const hintContainer = document.getElementById('challengeHintContainer');
+            const hintBtn = document.getElementById('hintBtn');
+            const hintText = document.getElementById('hintText');
+            
+            if (state.challengeType === 'diameter') {
+                hintContainer.classList.remove('hidden');
+                hintBtn.classList.remove('hidden');
+                hintBtn.innerHTML = '💡 提示';
+                hintText.classList.add('hidden');
+                hintText.innerHTML = '';
+            } else {
+                hintContainer.classList.add('hidden');
+            }
+            
+            // 重置 UI
+            const feedback = document.getElementById('challengeFeedback');
+            feedback.innerText = '準備好就按住左邊的交會點開始畫吧！';
+            feedback.className = 'mt-4 h-6 text-sm font-bold text-gray-500 text-center w-full';
+            document.getElementById('nextChallengeBtn').classList.add('hidden');
+            document.getElementById('challengeConcept').classList.add('hidden');
+        }
+
+        // 新增：漸進式提示功能
+        function showHint() {
+            if (state.challengeEvaluated) return; // 作答後不再觸發
+            
+            const hintText = document.getElementById('hintText');
+            const hintBtn = document.getElementById('hintBtn');
+            hintText.classList.remove('hidden');
+
+            if (state.hintLevel === 0) {
+                // 第一階段提示
+                state.hintLevel = 1;
+                hintText.innerHTML = `直徑 <span class="text-blue-600 font-bold">${state.challengeTargetVal}</span> 公分，半徑是 <strong class="text-red-500">____</strong> 公分`;
+                hintBtn.innerHTML = '💡 再多提示一點';
+            } else if (state.hintLevel === 1) {
+                // 第二階段提示
+                state.hintLevel = 2;
+                hintText.innerHTML = `直徑 <span class="text-blue-600 font-bold">${state.challengeTargetVal}</span> 公分，半徑是 <strong class="text-red-500">____</strong> 公分<br><span class="text-green-700 mt-2 inline-block font-bold">${state.challengeTargetVal} &divide; 2 = ____</span> <span class="text-gray-500 text-xs ml-1">(請用 2 的乘法想想看)</span>`;
+                hintBtn.classList.add('hidden'); // 給完所有提示後隱藏按鈕
+            }
+        }
+
+        function evaluateChallenge() {
+            state.challengeEvaluated = true;
+            
+            // 作答完畢時，如果還有提示按鈕，將其隱藏保持畫面乾淨
+            const hintBtn = document.getElementById('hintBtn');
+            if (hintBtn) hintBtn.classList.add('hidden'); 
+            
+            const feedback = document.getElementById('challengeFeedback');
+            const nextBtn = document.getElementById('nextChallengeBtn');
+            const concept = document.getElementById('challengeConcept');
+            
+            if (state.radius === state.challengeTargetR) {
+                feedback.innerHTML = '<span class="text-2xl">🎉</span><br/>太厲害了！完全正確！';
+                feedback.className = 'mt-2 text-xl font-bold text-green-600 text-center w-full';
+                concept.classList.remove('hidden'); // 答對顯示複習概念
+            } else {
+                const userTypeVal = state.challengeType === 'radius' ? state.radius : state.radius * 2;
+                const typeStr = state.challengeType === 'radius' ? '半徑' : '直徑';
+                
+                feedback.innerHTML = `❌ 哎呀！你畫的${typeStr}是 <strong class="text-red-600">${userTypeVal} cm</strong>。<br/><span class="text-green-600 text-[15px] mt-1 inline-block">綠色虛線才是正確的喔！</span>`;
+                feedback.className = 'mt-2 text-base font-bold text-red-500 text-center w-full';
+                concept.classList.add('hidden');
+            }
+            
+            nextBtn.classList.remove('hidden');
+            
+            // 如果是在手機版，自動向下捲動讓按鈕顯示出來
+            if (window.innerWidth < 1024) {
+                setTimeout(() => {
+                    document.getElementById('quizPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+
+            draw(); // 觸發重繪以顯示正確的綠色圓圈 (若答錯)
+        }
+
+        // ================== 畫布互動與繪製邏輯 ==================
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            const availableWidth = container.clientWidth - 16; 
+            const availableHeight = window.innerHeight - 250;
+            const maxSize = Math.min(availableWidth, availableHeight, 600);
             
             canvas.width = maxSize;
             canvas.height = maxSize;
-            
-            // 計算每一格的大小，保留外圍一格的 padding 讓邊界點可以完整顯示
             cellSize = maxSize / (GRID_SIZE + 2);
             padding = cellSize;
-            
             draw();
         }
 
         window.addEventListener('resize', resizeCanvas);
 
-        // 取得滑鼠或觸控在畫布上的相對座標
         function getPointerPos(e) {
             const rect = canvas.getBoundingClientRect();
             let clientX = e.clientX;
@@ -174,11 +348,7 @@
                 clientX = e.changedTouches[0].clientX;
                 clientY = e.changedTouches[0].clientY;
             }
-
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function getNearestGridPoint(pos) {
@@ -190,12 +360,10 @@
         }
 
         function startAction(e) {
-            if (state.phase === 'quiz') return; // 測驗狀態時鎖定畫布
+            if (state.phase === 'quiz') return; // 鎖定畫布狀態
             if (e.type === 'touchstart') e.preventDefault(); 
             
-            clearTimeout(timerId);
-            clearInterval(countdownInterval);
-            cancelAnimationFrame(animationFrameId);
+            resetCanvas(); // 在開始新拖拉時重置畫布
             
             const pos = getPointerPos(e);
             state.center = getNearestGridPoint(pos);
@@ -269,7 +437,13 @@
                 state.drawAngle = endAngle;
                 state.phase = 'quiz';
                 draw();
-                showQuiz(); // 動畫畫完後呼叫測驗解鎖
+                
+                // 動畫畫完後根據模式觸發不同邏輯
+                if (state.mode === 'explore') {
+                    showExploreQuiz(); 
+                } else {
+                    evaluateChallenge();
+                }
                 return;
             }
             
@@ -277,13 +451,24 @@
             animationFrameId = requestAnimationFrame(animateCircle);
         }
 
+        function resetCanvas() {
+            state.phase = 'idle';
+            state.center = null;
+            state.radius = 0;
+            state.challengeEvaluated = false;
+            clearTimeout(timerId);
+            clearInterval(countdownInterval);
+            cancelAnimationFrame(animationFrameId);
+            draw();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 游標樣式切換：測驗時顯示禁止符號
+            // 游標樣式切換：測驗/鎖定時顯示禁止符號
             canvas.style.cursor = state.phase === 'quiz' ? 'not-allowed' : 'crosshair';
 
-            // 1. 繪製 20x20 方格紙
+            // 1. 繪製方格紙
             ctx.beginPath();
             ctx.strokeStyle = '#bae6fd'; 
             ctx.lineWidth = 1;
@@ -321,21 +506,21 @@
                 ctx.setLineDash([]);
 
                 if (state.radius > 0) {
-                    // 游標旁邊顯示目前半徑
-                    ctx.fillStyle = '#4b5563'; 
-                    ctx.font = 'bold 16px sans-serif';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'bottom';
-                    
-                    // 加一個白色半透明背景讓字更清楚
-                    const text = `半徑: ${state.radius}`;
-                    const textWidth = ctx.measureText(text).width;
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.fillRect(state.dragPixelPos.x + 5, state.dragPixelPos.y - 30, textWidth + 10, 24);
-                    
-                    ctx.fillStyle = '#1e3a8a';
-                    ctx.fillText(text, state.dragPixelPos.x + 10, state.dragPixelPos.y - 10);
+                    // ★ 只有在自由探索模式，才顯示半徑數值提示
+                    if (state.mode === 'explore') {
+                        ctx.fillStyle = '#4b5563'; 
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'bottom';
+                        const text = `半徑: ${state.radius}`;
+                        const textWidth = ctx.measureText(text).width;
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.fillRect(state.dragPixelPos.x + 5, state.dragPixelPos.y - 30, textWidth + 10, 24);
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.fillText(text, state.dragPixelPos.x + 10, state.dragPixelPos.y - 10);
+                    }
 
+                    // 畫出拖拉的半透明預覽圓
                     ctx.beginPath();
                     ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
                     ctx.lineWidth = 2;
@@ -375,8 +560,10 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
+                // 畫出學生拉的圓
                 ctx.beginPath();
-                ctx.strokeStyle = '#3b82f6'; 
+                // 在挑戰模式答錯時，學生的圓會變成稍微淡一點的紅色，強調對比
+                ctx.strokeStyle = (state.mode === 'challenge' && state.challengeEvaluated && state.radius !== state.challengeTargetR) ? '#ef4444' : '#3b82f6'; 
                 ctx.lineWidth = 3;
                 ctx.arc(cx, cy, state.radius * cellSize, state.startAngle, state.drawAngle);
                 ctx.stroke();
@@ -386,10 +573,49 @@
                     const py = cy + Math.sin(state.drawAngle) * state.radius * cellSize;
                     drawCompass(cx, cy, px, py, state.radius * cellSize);
                 }
+
+                // ★ 挑戰模式答錯時：疊加顯示「正確答案」的綠色虛線圓圈
+                if (state.mode === 'challenge' && state.challengeEvaluated && state.radius !== state.challengeTargetR) {
+                    
+                    // 畫正確的圓 (綠色粗虛線)
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#22c55e'; // 亮綠色
+                    ctx.setLineDash([8, 6]);
+                    ctx.lineWidth = 4;
+                    ctx.arc(cx, cy, state.challengeTargetR * cellSize, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // 畫正確的半徑虛線
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#16a34a'; 
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.moveTo(cx, cy);
+                    // 為了不跟學生的線重疊，固定畫往右的水平線
+                    ctx.lineTo(cx + state.challengeTargetR * cellSize, cy); 
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // 標示正確答案文字
+                    ctx.fillStyle = '#15803d'; // 深綠色
+                    ctx.font = 'bold 18px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    // 加上白色發光陰影，避免文字被線條蓋住看不清楚
+                    ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+                    ctx.shadowBlur = 6;
+                    
+                    const correctTypeStr = state.challengeType === 'radius' ? `正確半徑: ${state.challengeTargetR}cm` : `正確直徑: ${state.challengeTargetVal}cm`;
+                    // 畫在正確圓弧的邊緣或圓心上方
+                    ctx.fillText(correctTypeStr, cx, cy - 10);
+                    
+                    ctx.shadowBlur = 0; // 重置陰影
+                }
             }
         }
 
-        // 繪製虛化圓規
         function drawCompass(cx, cy, px, py, radiusPx) {
             ctx.save();
             ctx.globalAlpha = 0.6; 
@@ -397,7 +623,6 @@
             const hx = cx;
             const hy = cy - compassHeight;
 
-            // 針腳
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(hx, hy);
@@ -406,7 +631,6 @@
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // 筆腳
             ctx.beginPath();
             ctx.moveTo(px, py);
             ctx.lineTo(hx, hy);
@@ -415,7 +639,6 @@
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // 鉛筆頭
             const dxLeg = px - hx;
             const dyLeg = py - hy;
             const legLen = Math.sqrt(dxLeg * dxLeg + dyLeg * dyLeg);
@@ -444,7 +667,6 @@
             ctx.fillStyle = '#111827';
             ctx.fill();
 
-            // 頂部轉軸
             ctx.beginPath();
             ctx.arc(hx, hy, 7, 0, Math.PI * 2);
             ctx.fillStyle = '#374151'; 
@@ -453,7 +675,6 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 頂部把手
             ctx.beginPath();
             ctx.moveTo(hx, hy - 7);
             ctx.lineTo(hx, hy - 28);
@@ -469,28 +690,24 @@
             ctx.restore();
         }
 
-        // --- 測驗題相關邏輯 ---
-        function showQuiz() {
-            // 隱藏未解鎖的遮罩
+        // ================== 自由探索測驗邏輯 ==================
+        function showExploreQuiz() {
             document.getElementById('quizDisabledOverlay').classList.add('opacity-0');
             setTimeout(() => {
                 document.getElementById('quizDisabledOverlay').classList.add('hidden');
-            }, 500); // 等待淡出動畫結束
+            }, 500); 
 
-            // 改變面板樣式以吸引注意
             const panel = document.getElementById('quizPanel');
             panel.classList.replace('border-gray-200', 'border-blue-400');
             panel.classList.add('ring-4', 'ring-blue-100');
 
-            // 重置輸入與回饋
             document.getElementById('ansRadius').value = '0';
             document.getElementById('ansDiameter').value = '0';
             document.getElementById('quizFeedback').innerText = '';
-            document.getElementById('mathConcept').classList.add('hidden'); // 重置時隱藏概念區塊
+            document.getElementById('mathConcept').classList.add('hidden'); 
             document.getElementById('checkBtn').classList.remove('hidden');
             document.getElementById('resetBtn').classList.add('hidden');
 
-            // 如果是手機/平板直向 (螢幕寬度小於 1024px)，自動捲動畫面到測驗題的位置
             if (window.innerWidth < 1024) {
                 setTimeout(() => {
                     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -502,12 +719,9 @@
             const input = document.getElementById(id);
             let val = parseInt(input.value) || 0;
             val += delta;
-            
-            // 確保數字不會小於 0
             if (val < 0) val = 0; 
             input.value = val;
             
-            // 學生每次更改數字時，自動清空下方的錯誤提示文字與概念區塊，提升體驗
             document.getElementById('quizFeedback').innerText = '';
             document.getElementById('mathConcept').classList.add('hidden');
         }
@@ -530,7 +744,7 @@
             if (rInput === correctR && dInput === correctD) {
                 feedback.innerText = '🎉 答對了！太棒了！ 🎉';
                 feedback.className = 'h-6 text-lg font-bold text-green-600 text-center w-full';
-                document.getElementById('mathConcept').classList.remove('hidden'); // 答對時顯示概念區塊
+                document.getElementById('mathConcept').classList.remove('hidden'); 
                 document.getElementById('checkBtn').classList.add('hidden');
                 document.getElementById('resetBtn').classList.remove('hidden');
             } else if (rInput === correctR && dInput !== correctD) {
@@ -548,10 +762,8 @@
             }
         }
 
-        function resetApp() {
-            // 恢復測驗面板鎖定狀態
+        function resetExplore() {
             document.getElementById('quizDisabledOverlay').classList.remove('hidden');
-            // 小延遲以確保 display:none 移除後才執行 opacity 漸變
             setTimeout(() => {
                 document.getElementById('quizDisabledOverlay').classList.remove('opacity-0');
             }, 10);
@@ -560,12 +772,8 @@
             panel.classList.replace('border-blue-400', 'border-gray-200');
             panel.classList.remove('ring-4', 'ring-blue-100');
             
-            state.phase = 'idle';
-            state.center = null;
-            state.radius = 0;
-            draw();
+            resetCanvas();
 
-            // 如果是手機版，捲動回上方畫布區
             if (window.innerWidth < 1024) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
