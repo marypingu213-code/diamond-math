@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時間計算與拖曳換算教學工具</title>
+  
+  <!-- 引入 Tailwind CSS 進行樣式排版 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 引入 React 核心庫 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- 引入 Babel 用於在瀏覽器即時編譯 JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* 隱藏原生捲軸的工具 class，用於數線水平滑動區域 */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 selection:bg-blue-200">
+  
+  <!-- React 應用程式掛載點 -->
+  <div id="root"></div>
+
+  <!-- 應用程式邏輯與介面 (Babel 腳本) -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ==========================================
+    // === 內建 SVG 圖示元件 (無須依賴外部套件) ===
+    // ==========================================
+    const Clock = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+    const History = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>;
+    const CheckCircle2 = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+    const RotateCcw = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+    const Hand = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v0a2 2 0 0 0-2-2a2 2 0 0 0-2 2v0a2 2 0 0 0-2-2a2 2 0 0 0-2 2v5"/><path d="M14 15h.01"/><path d="M10 15h.01"/><path d="M18 11v5a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6v-6c0-1.38 1.12-2.5 2.5-2.5h0c.28 0 .5.22.5.5v3c0 .28.22.5.5.5h0c.28 0 .5-.22.5-.5v-4"/></svg>;
+    const GripHorizontal = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="9" r="1"/><circle cx="19" cy="9" r="1"/><circle cx="5" cy="9" r="1"/><circle cx="12" cy="15" r="1"/><circle cx="19" cy="15" r="1"/><circle cx="5" cy="15" r="1"/></svg>;
+    const SunMoon = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 8a2.836 2.836 0 0 0-2.836 2.836"/><path d="M12 20a8 8 0 1 0-8-8"/><path d="M22 12h-1"/><path d="M12 2v1"/><path d="M19.071 4.929l-.707.707"/><path d="M4.929 19.071l.707-.707"/></svg>;
+    const Sun = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M5 5l1.5 1.5"/><path d="M17.5 17.5L19 19"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M5 19l1.5-1.5"/><path d="M17.5 6.5L19 5"/></svg>;
+    const Moon = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6.364 6.364 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>;
+    const Dices = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>;
+    const Target = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+    const Check = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
+    const XIcon = ({size=24, className=""}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+
+    // ==========================================
+    // === 主應用程式 (TimeCalculator) ===
+    // ==========================================
+    function TimeCalculator() {
+      // 第一部分：12 / 24 時制對照 (狀態)
+      const [selectedHour, setSelectedHour] = useState(14); 
+      const [p1Quiz, setP1Quiz] = useState({ active: false, targetHour: null, questionText: '', feedback: null });
+
+      // 第二部分：時間計算與拖曳 (狀態)
+      const [fields, setFields] = useState({ start: { h: '', m: '' }, duration: { h: '', m: '' }, end: { h: '', m: '' } });
+      const [calcState, setCalcState] = useState(null);
+      const [borrowCount, setBorrowCount] = useState(0); 
+      const [carryCount, setCarryCount] = useState(0);   
+      const [drag, setDrag] = useState({ active: false, type: null, x: 0, y: 0 });
+
+      // 第二部分挑戰模式狀態
+      const [p2Quiz, setP2Quiz] = useState({ active: false, targetField: null, answer: { h: 0, m: 0 }, feedback: null });
+
+      // ==========================================
+      // 第一部分邏輯：時制轉換出題
+      // ==========================================
+      const get12HourText = (h) => {
+        if (h === 0) return '午夜 12';
+        if (h < 12) return `上午 ${h}`;
+        if (h === 12) return '中午 12';
+        if (h < 24) return `下午 ${h - 12}`;
+        return '午夜 12';
+      };
+
+      const generateP1Quiz = () => {
+        const h = Math.floor(Math.random() * 24);
+        const type = Math.random() > 0.5 ? 'to24' : 'to12'; 
+        const qText = type === 'to24' ? get12HourText(h) : `${h} 時`;
+        
+        setP1Quiz({ active: true, targetHour: h, questionText: qText, feedback: null });
+        setSelectedHour(null); // 清空選擇等待作答
+      };
+
+      const handleTimelineClick = (i) => {
+        setSelectedHour(i);
+        if (p1Quiz.active) {
+          if (i === p1Quiz.targetHour) {
+            setP1Quiz(prev => ({ ...prev, feedback: 'correct' }));
+          } else {
+            setP1Quiz(prev => ({ ...prev, feedback: 'wrong' }));
+          }
+        }
+      };
+
+      // ==========================================
+      // 第二部分邏輯：時間計算與出題
+      // ==========================================
+      const handleInputChange = (field, unit, value) => {
+        if (value !== '' && !/^\d+$/.test(value)) return;
+        setFields(prev => ({ ...prev, [field]: { ...prev[field], [unit]: value } }));
+        setCalcState(null);
+        if (p2Quiz.active) setP2Quiz(prev => ({ ...prev, feedback: null })); 
+      };
+
+      const clearAll = () => {
+        setFields({ start: { h: '', m: '' }, duration: { h: '', m: '' }, end: { h: '', m: '' } });
+        setCalcState(null);
+        setBorrowCount(0);
+        setCarryCount(0);
+        setP2Quiz({ active: false, targetField: null, answer: { h:0, m:0 }, feedback: null });
+      };
+
+      const generateP2Quiz = () => {
+        const sh = Math.floor(Math.random() * 15) + 6; // 早上6點~晚上20點
+        const sm = Math.floor(Math.random() * 60);
+        const dh = Math.floor(Math.random() * 4) + 1;  // 經過 1~4 小時
+        const dm = Math.floor(Math.random() * 60);
+
+        let eh = sh + dh;
+        let em = sm + dm;
+        if (em >= 60) { em -= 60; eh += 1; }
+
+        const fieldsArr = ['start', 'duration', 'end'];
+        const hiddenField = fieldsArr[Math.floor(Math.random() * 3)];
+
+        const mockData = {
+          start: { h: sh.toString(), m: sm.toString() },
+          duration: { h: dh.toString(), m: dm.toString() },
+          end: { h: eh.toString(), m: em.toString() }
+        };
+
+        const ans = { ...mockData[hiddenField] };
+        mockData[hiddenField] = { h: '', m: '' };
+
+        setFields(mockData);
+        setCalcState(null);
+        setBorrowCount(0);
+        setCarryCount(0);
+        setP2Quiz({ active: true, targetField: hiddenField, answer: ans, feedback: null });
+      };
+
+      const checkP2Answer = () => {
+        const userH = parseInt(fields[p2Quiz.targetField].h, 10);
+        const userM = parseInt(fields[p2Quiz.targetField].m, 10);
+        const ansH = parseInt(p2Quiz.answer.h, 10);
+        const ansM = parseInt(p2Quiz.answer.m, 10);
+
+        if (isNaN(userH) || isNaN(userM)) {
+           setP2Quiz(prev => ({ ...prev, feedback: 'wrong' }));
+           return;
+        }
+        if (userH === ansH && userM === ansM) {
+          setP2Quiz(prev => ({ ...prev, feedback: 'correct' }));
+        } else {
+          setP2Quiz(prev => ({ ...prev, feedback: 'wrong' }));
+        }
+      };
+
+      const generateCalculation = () => {
+        const parse = (val) => val === '' ? NaN : parseInt(val, 10);
+        const sH = parse(fields.start.h), sM = parse(fields.start.m);
+        const dH = parse(fields.duration.h), dM = parse(fields.duration.m);
+        const eH = parse(fields.end.h), eM = parse(fields.end.m);
+
+        const hasStart = !isNaN(sH) || !isNaN(sM);
+        const hasDur = !isNaN(dH) || !isNaN(dM);
+        const hasEnd = !isNaN(eH) || !isNaN(eM);
+
+        const safeS = { h: isNaN(sH) ? 0 : sH, m: isNaN(sM) ? 0 : sM };
+        const safeD = { h: isNaN(dH) ? 0 : dH, m: isNaN(dM) ? 0 : dM };
+        const safeE = { h: isNaN(eH) ? 0 : eH, m: isNaN(eM) ? 0 : eM };
+
+        setBorrowCount(0);
+        setCarryCount(0);
+
+        if (hasStart && hasDur) {
+          setCalcState({ op: '+', top: safeS, bot: safeD, target: 'end' });
+        } else if (hasEnd && hasDur) {
+          setCalcState({ op: '-', top: safeE, bot: safeD, target: 'start' });
+        } else if (hasStart && hasEnd) {
+          setCalcState({ op: '-', top: safeE, bot: safeS, target: 'duration' });
+        } else {
+          alert('請至少填寫兩個欄位的時間！');
+        }
+      };
+
+      const filledCount = Object.values(fields).filter(f => f.h !== '' || f.m !== '').length;
+      const canCalculate = filledCount >= 2;
+
+      // 拖曳監聽
+      useEffect(() => {
+        const handlePointerMove = (e) => {
+          if (!drag.active) return;
+          setDrag(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
+        };
+        const handlePointerUp = (e) => {
+          if (!drag.active) return;
+          const elements = document.elementsFromPoint(e.clientX, e.clientY);
+          const isMinuteZone = elements.some(el => el.dataset?.dropzone === 'minute');
+          const isHourZone = elements.some(el => el.dataset?.dropzone === 'hour');
+
+          if (drag.type === 'borrow' && isMinuteZone) setBorrowCount(c => c + 1);
+          else if (drag.type === 'carry' && isHourZone) setCarryCount(c => c + 1);
+          
+          setDrag({ active: false, type: null, x: 0, y: 0 });
+        };
+
+        if (drag.active) {
+          window.addEventListener('pointermove', handlePointerMove);
+          window.addEventListener('pointerup', handlePointerUp);
+        }
+        return () => {
+          window.removeEventListener('pointermove', handlePointerMove);
+          window.removeEventListener('pointerup', handlePointerUp);
+        };
+      }, [drag.active, drag.type]);
+
+      const startDrag = (e, type) => {
+        e.preventDefault(); 
+        setDrag({ active: true, type, x: e.clientX, y: e.clientY });
+      };
+
+      const renderMathBoard = () => {
+        if (!calcState) return null;
+        const { op, top, bot } = calcState;
+
+        if (op === '+') {
+          const rawSumH = top.h + bot.h;
+          const rawSumM = top.m + bot.m;
+          const finalH = rawSumH + carryCount;
+          const finalM = rawSumM - (carryCount * 60);
+          const needsCarry = finalM >= 60;
+
+          return (
+            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-2xl relative select-none mt-6">
+              <h3 className="absolute top-4 left-4 text-sm text-slate-400 font-sans flex items-center gap-2">
+                直式計算區 <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs">加法進位</span>
+              </h3>
+              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center mt-6">
+                <div className="text-slate-500 font-bold"></div>
+                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2" data-dropzone="hour">時</div>
+                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2">分</div>
+                <div className="text-right"></div>
+                <div className="text-blue-300">{top.h}</div>
+                <div className="text-blue-300">{top.m}</div>
+                <div className="text-right text-slate-400">+</div>
+                <div className="text-green-300">{bot.h}</div>
+                <div className="text-green-300">{bot.m}</div>
+              </div>
+              <div className="w-[15rem] border-t-2 border-slate-500 my-4"></div>
+              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center relative">
+                <div className="text-right"></div>
+                <div className="relative flex flex-col items-center" data-dropzone="hour">
+                  {carryCount > 0 && <div className="text-yellow-400 text-sm absolute -top-6 animate-bounce">+ {carryCount}</div>}
+                  <div className={`transition-all ${carryCount > 0 ? 'text-white font-bold text-3xl' : 'text-slate-200'}`}>{finalH}</div>
+                  {drag.active && drag.type === 'carry' && <div className="absolute inset-0 border-2 border-yellow-400/50 border-dashed rounded-lg bg-yellow-400/10 animate-pulse"></div>}
+                </div>
+                <div className="relative flex flex-col items-center">
+                  {carryCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{rawSumM}</div>}
+                  <div className={`transition-all ${carryCount > 0 ? 'text-white' : 'text-slate-200'} ${needsCarry ? 'text-red-400' : ''}`}>{finalM}</div>
+                  {needsCarry && !drag.active && (
+                    <div className="absolute -right-16 top-0 bg-yellow-500 hover:bg-yellow-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none"
+                         onPointerDown={(e) => startDrag(e, 'carry')} style={{ touchAction: 'none' }}>
+                      <Hand size={16}/> 換
+                    </div>
+                  )}
+                </div>
+              </div>
+              {needsCarry && <div className="mt-8 text-sm text-yellow-300/80 font-sans bg-yellow-400/10 px-4 py-2 rounded-lg border border-yellow-400/20">提示：分鐘大於 60，請按住右側「換」按鈕拖曳至「時」進行進位！</div>}
+            </div>
+          );
+        } else {
+          const effTopH = top.h - borrowCount;
+          const effTopM = top.m + (borrowCount * 60);
+          const finalH = effTopH - bot.h;
+          const finalM = effTopM - bot.m;
+          const needsBorrow = finalM < 0;
+
+          return (
+            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-2xl relative select-none mt-6">
+              <h3 className="absolute top-4 left-4 text-sm text-slate-400 font-sans flex items-center gap-2">
+                直式計算區 <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded text-xs">減法借位</span>
+              </h3>
+              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center mt-6">
+                <div className="text-slate-500 font-bold"></div>
+                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2">時</div>
+                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2" data-dropzone="minute">分</div>
+                <div className="text-right"></div>
+                <div className="relative flex flex-col items-center">
+                  {borrowCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{top.h}</div>}
+                  <div className={`transition-all ${borrowCount > 0 ? 'text-orange-300' : 'text-blue-300'}`}>{effTopH}</div>
+                  {needsBorrow && !drag.active && (
+                    <div className="absolute -left-16 top-0 bg-orange-500 hover:bg-orange-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none z-10"
+                         onPointerDown={(e) => startDrag(e, 'borrow')} style={{ touchAction: 'none' }}>
+                      <Hand size={16}/> 借
+                    </div>
+                  )}
+                </div>
+                <div className="relative flex flex-col items-center" data-dropzone="minute">
+                  {borrowCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{top.m}</div>}
+                  <div className={`transition-all ${borrowCount > 0 ? 'text-orange-300' : 'text-blue-300'} ${needsBorrow ? 'text-red-400' : ''}`}>{effTopM}</div>
+                  {drag.active && drag.type === 'borrow' && <div className="absolute inset-0 border-2 border-orange-400/50 border-dashed rounded-lg bg-orange-400/10 animate-pulse"></div>}
+                </div>
+                <div className="text-right text-slate-400">-</div>
+                <div className="text-green-300">{bot.h}</div>
+                <div className="text-green-300">{bot.m}</div>
+              </div>
+              <div className="w-[15rem] border-t-2 border-slate-500 my-4"></div>
+              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center">
+                <div className="text-right"></div>
+                <div className="text-white font-bold">{needsBorrow ? '?' : finalH}</div>
+                <div className="text-white font-bold">{needsBorrow ? '?' : finalM}</div>
+              </div>
+              {needsBorrow && <div className="mt-8 text-sm text-orange-300/80 font-sans bg-orange-400/10 px-4 py-2 rounded-lg border border-orange-400/20">提示：分鐘不夠減，請按住左側「借」按鈕拖曳至「分」進行借位！</div>}
+            </div>
+          );
+        }
+      };
+
+      return (
+        <div className="min-h-screen p-4 md:p-8 font-sans">
+          <div className="max-w-5xl mx-auto space-y-12">
+            
+            {/* =========================================
+                第一部分：12 / 24 時制對照數線
+            ========================================= */}
+            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 border-b border-slate-100 pb-6">
+                <div className="text-center md:text-left space-y-2">
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 flex items-center justify-center md:justify-start gap-3">
+                    <SunMoon className="text-amber-500" size={32} /> 
+                    第一部分：12 / 24 時制對照
+                  </h2>
+                  <p className="text-slate-500 font-medium">點擊下方數線上的圓點，觀察時間的變化</p>
+                </div>
+                <button onClick={generateP1Quiz} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-indigo-500 hover:bg-indigo-600 transition-all shadow hover:shadow-lg active:scale-95">
+                  <Dices size={20} /> 隨機出題
+                </button>
+              </div>
+
+              {p1Quiz.active && (
+                <div className="mb-8 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl flex flex-col md:flex-row items-center justify-center gap-4 transition-all duration-300">
+                  <div className="flex items-center gap-2 text-indigo-700 font-bold text-lg md:text-xl">
+                    <Target className="text-indigo-500" size={24} />
+                    任務：請在數線上點出【 <span className="text-indigo-600 text-2xl mx-1">{p1Quiz.questionText}</span> 】的位置！
+                  </div>
+                  {p1Quiz.feedback === 'correct' && (
+                    <div className="flex items-center gap-2 text-green-600 bg-green-100 px-4 py-1.5 rounded-full font-bold"><CheckCircle2 size={20} /> 答對了！</div>
+                  )}
+                  {p1Quiz.feedback === 'wrong' && (
+                    <div className="flex items-center gap-2 text-red-500 bg-red-100 px-4 py-1.5 rounded-full font-bold"><XIcon size={20} /> 不對喔，再試試</div>
+                  )}
+                </div>
+              )}
+
+              <div className={`flex justify-center mb-8 transition-opacity duration-300 ${(p1Quiz.active && selectedHour === null) ? 'opacity-0' : 'opacity-100'}`}>
+                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 bg-slate-50 px-6 py-4 rounded-2xl border-2 border-slate-100 shadow-inner">
+                  <div className="text-xl md:text-2xl font-bold text-amber-600 min-w-[120px] text-center">{selectedHour !== null ? get12HourText(selectedHour) : '--'} 時</div>
+                  <div className="text-slate-400 font-bold text-xl">=</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-600 min-w-[80px] text-center">{selectedHour !== null ? selectedHour : '--'} 時</div>
+                </div>
+              </div>
+
+              <div className="relative w-full overflow-x-auto pb-6 hide-scrollbar cursor-grab active:cursor-grabbing">
+                <div className="min-w-[900px] relative px-6 pt-10 flex flex-col">
+                  <div className="absolute top-0 left-6 right-[50%] h-10 bg-amber-50 rounded-tl-xl border-t-4 border-amber-300 flex items-center justify-center text-amber-700 font-bold text-sm">
+                    <Sun size={16} className="mr-1"/> 上午 (0~12時)
+                  </div>
+                  <div className="absolute top-0 left-[50%] right-6 h-10 bg-indigo-50 rounded-tr-xl border-t-4 border-indigo-300 flex items-center justify-center text-indigo-700 font-bold text-sm">
+                    <Moon size={16} className="mr-1"/> 下午 (13~24時)
+                  </div>
+
+                  <div className="relative flex justify-between items-center mt-10">
+                    <div className="absolute left-0 right-0 h-1.5 bg-blue-300 rounded-full z-0"></div>
+                    {[...Array(25)].map((_, i) => {
+                      const h12 = i === 0 || i === 12 || i === 24 ? 12 : i % 12;
+                      const isSelected = selectedHour === i;
+                      return (
+                        <div key={i} onClick={() => handleTimelineClick(i)} className="relative z-10 flex flex-col items-center cursor-pointer group">
+                          <span className={`absolute -top-7 font-bold transition-all ${isSelected ? 'text-amber-600 scale-125' : 'text-slate-500 group-hover:text-amber-500'}`}>{h12}</span>
+                          <div className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${isSelected ? 'bg-amber-400 border-amber-500 scale-[1.5] shadow-md' : 'bg-white border-blue-400 group-hover:border-amber-400 group-hover:scale-125'}`}></div>
+                          <span className={`absolute -bottom-7 font-bold transition-all ${isSelected ? 'text-blue-600 scale-125' : 'text-slate-500 group-hover:text-blue-500'}`}>{i}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-center mt-12 text-sm text-slate-400 font-bold tracking-widest">24 時制</div>
+                </div>
+              </div>
+            </div>
+
+            {/* =========================================
+                第二部分：時間計算與拖曳換算
+            ========================================= */}
+            <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-200">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 border-b border-slate-100 pb-6">
+                <div className="text-center md:text-left space-y-2">
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 flex items-center justify-center md:justify-start gap-3">
+                    <Clock className="text-blue-600" size={32} /> 
+                    第二部分：時間計算與拖曳換算
+                  </h2>
+                  <p className="text-slate-500 font-medium">可以自由填寫數字，或者點擊右方挑戰隨機題型</p>
+                </div>
+                 <button onClick={generateP2Quiz} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-all shadow hover:shadow-lg active:scale-95">
+                  <Dices size={20} /> 隨機應用題
+                </button>
+              </div>
+
+              {p2Quiz.active && (
+                <div className="mb-10 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl flex flex-col md:flex-row items-center justify-center gap-4 transition-all duration-300">
+                  <div className="flex items-center gap-2 text-emerald-800 font-bold text-lg">
+                    <Target className="text-emerald-500" size={24} />
+                    挑戰題：請算出被挖空的「<span className="text-emerald-600 text-xl border-b-2 border-emerald-400">
+                      {p2Quiz.targetField === 'start' ? '開始時間' : p2Quiz.targetField === 'duration' ? '經過時間' : '結束時間'}
+                    </span>」！
+                  </div>
+                  {p2Quiz.feedback === 'correct' && (
+                     <div className="flex items-center gap-2 text-white bg-emerald-500 px-4 py-1.5 rounded-full font-bold shadow"><CheckCircle2 size={20} /> 答對了，非常棒！</div>
+                  )}
+                  {p2Quiz.feedback === 'wrong' && (
+                     <div className="flex items-center gap-2 text-white bg-red-400 px-4 py-1.5 rounded-full font-bold shadow"><XIcon size={20} /> 算錯囉，再檢查一下</div>
+                  )}
+                </div>
+              )}
+
+              {/* 輸入與數線區塊 */}
+              <div className="relative flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 bg-slate-50 p-6 md:pt-24 md:pb-16 rounded-3xl border border-slate-200 mb-8">
+                
+                <div className="hidden md:block absolute top-1/2 left-[5%] right-[5%] pointer-events-none z-0">
+                  <div className="absolute w-full h-[6px] bg-blue-500 rounded-full -translate-y-1/2"></div>
+                  <div className="absolute right-[-4px] top-1/2 w-0 h-0 border-y-[8px] border-y-transparent border-l-[16px] border-l-blue-500 -translate-y-1/2"></div>
+                </div>
+
+                <div className={`relative w-full md:w-56 z-20 ${p2Quiz.active && p2Quiz.targetField === 'start' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
+                  <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'start' ? 'border-slate-200 opacity-90' : 'border-blue-200 focus-within:border-blue-400 focus-within:shadow-md hover:-translate-y-1'}`}>
+                    <span className="text-blue-800 font-bold mb-3 flex items-center gap-2"><CheckCircle2 size={18}/> 開始時間</span>
+                    <div className="flex items-center justify-center gap-2 w-full">
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" placeholder="時" value={fields.start.h} onChange={(e) => handleInputChange('start', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'start'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-400 ${p2Quiz.active && p2Quiz.targetField !== 'start' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-blue-200 focus:bg-white'}`} />
+                        <span className="text-blue-600 font-medium whitespace-nowrap">時</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" max="59" placeholder="分" value={fields.start.m} onChange={(e) => handleInputChange('start', 'm', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'start'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-400 ${p2Quiz.active && p2Quiz.targetField !== 'start' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-blue-200 focus:bg-white'}`} />
+                        <span className="text-blue-600 font-medium whitespace-nowrap">分</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`relative w-full md:w-56 z-20 md:-translate-y-[55%] ${p2Quiz.active && p2Quiz.targetField === 'duration' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
+                  <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'duration' ? 'border-slate-200 opacity-90' : 'border-green-200 focus-within:border-green-400 focus-within:shadow-md hover:-translate-y-1'}`}>
+                    <span className="text-green-800 font-bold mb-3 flex items-center gap-2"><History size={18}/> 經過時間</span>
+                    <div className="flex items-center justify-center gap-2 w-full">
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" placeholder="時" value={fields.duration.h} onChange={(e) => handleInputChange('duration', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'duration'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-green-400 ${p2Quiz.active && p2Quiz.targetField !== 'duration' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-green-200 focus:bg-white'}`} />
+                        <span className="text-green-600 font-medium whitespace-nowrap">時</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" max="59" placeholder="分" value={fields.duration.m} onChange={(e) => handleInputChange('duration', 'm', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'duration'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-green-400 ${p2Quiz.active && p2Quiz.targetField !== 'duration' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-green-200 focus:bg-white'}`} />
+                        <span className="text-green-600 font-medium whitespace-nowrap">分</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`relative w-full md:w-56 z-20 ${p2Quiz.active && p2Quiz.targetField === 'end' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
+                  <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'end' ? 'border-slate-200 opacity-90' : 'border-purple-200 focus-within:border-purple-400 focus-within:shadow-md hover:-translate-y-1'}`}>
+                    <span className="text-purple-800 font-bold mb-3 flex items-center gap-2"><CheckCircle2 size={18}/> 結束時間</span>
+                    <div className="flex items-center justify-center gap-2 w-full">
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" placeholder="時" value={fields.end.h} onChange={(e) => handleInputChange('end', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'end'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-purple-400 ${p2Quiz.active && p2Quiz.targetField !== 'end' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-purple-200 focus:bg-white'}`} />
+                        <span className="text-purple-600 font-medium whitespace-nowrap">時</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <input type="number" min="0" max="59" placeholder="分" value={fields.end.m} onChange={(e) => handleInputChange('end', 'm', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'end'}
+                               className={`w-16 text-center p-2 rounded-lg border font-bold text-slate-700 outline-none focus:ring-2 focus:ring-purple-400 ${p2Quiz.active && p2Quiz.targetField !== 'end' ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-slate-50 border-purple-200 focus:bg-white'}`} />
+                        <span className="text-purple-600 font-medium whitespace-nowrap">分</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap justify-center gap-4">
+                <button onClick={clearAll} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                  <RotateCcw size={20} /> 清除重來
+                </button>
+                <button onClick={generateCalculation} disabled={!canCalculate} className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white transition-all shadow-md ${canCalculate ? 'bg-blue-600 hover:bg-blue-500 hover:shadow-lg active:scale-95' : 'bg-slate-300 cursor-not-allowed opacity-70'}`}>
+                  產生直式算式
+                </button>
+                {p2Quiz.active && (
+                  <button onClick={checkP2Answer} className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-amber-500 hover:bg-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95 ml-2">
+                    <Check size={20} /> 對答案
+                  </button>
+                )}
+              </div>
+
+              {/* Math Board Area */}
+              {calcState && (
+                <div className="pt-8 border-t border-slate-200 transition-all duration-500 mt-8">
+                   {renderMathBoard()}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Floating Drag Element */}
+          {drag.active && (
+            <div className="fixed pointer-events-none z-50 bg-slate-800 text-white px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 font-bold text-lg border-2 border-slate-600 scale-110 transition-transform"
+                 style={{ left: drag.x, top: drag.y, transform: 'translate(-50%, -50%)' }}>
+              <GripHorizontal size={20} className="text-slate-400" />
+              {drag.type === 'borrow' ? '1時 ➜ 60分' : '60分 ➜ 1時'}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 將 React 元件渲染至畫面上的 root 元素
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<TimeCalculator />);
+  </script>
+</body>
+</html>
