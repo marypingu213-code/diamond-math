@@ -241,34 +241,36 @@
           const needsCarry = finalM >= 60;
 
           return (
-            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-2xl relative select-none mt-6">
+            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-3xl relative select-none mt-6">
               <h3 className="absolute top-4 left-4 text-sm text-slate-400 font-sans flex items-center gap-2">
                 直式計算區 <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs">加法進位</span>
               </h3>
-              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center mt-6">
-                <div className="text-slate-500 font-bold"></div>
-                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2" data-dropzone="hour">時</div>
-                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2">分</div>
-                <div className="text-right"></div>
-                <div className="text-blue-300">{top.h}</div>
-                <div className="text-blue-300">{top.m}</div>
-                <div className="text-right text-slate-400">+</div>
-                <div className="text-green-300">{bot.h}</div>
-                <div className="text-green-300">{bot.m}</div>
-              </div>
-              <div className="w-[15rem] border-t-2 border-slate-500 my-4"></div>
-              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center relative">
-                <div className="text-right"></div>
-                <div className="relative flex flex-col items-center" data-dropzone="hour">
-                  {carryCount > 0 && <div className="text-yellow-400 text-sm absolute -top-6 animate-bounce">+ {carryCount}</div>}
-                  <div className={`transition-all ${carryCount > 0 ? 'text-white font-bold text-3xl' : 'text-slate-200'}`}>{finalH}</div>
+              <div className="grid grid-cols-[2rem_4rem_4rem] gap-x-6 gap-y-3 text-right mt-8">
+                <div className="text-slate-500"></div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center" data-dropzone="hour">時</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center">分</div>
+                
+                <div></div>
+                <div className="relative text-blue-300 pr-2" data-dropzone="hour">
+                  {carryCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-yellow-400 text-xl font-bold animate-bounce">+{carryCount}</div>}
+                  {top.h}
                   {drag.active && drag.type === 'carry' && <div className="absolute inset-0 border-2 border-yellow-400/50 border-dashed rounded-lg bg-yellow-400/10 animate-pulse"></div>}
                 </div>
-                <div className="relative flex flex-col items-center">
-                  {carryCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{rawSumM}</div>}
-                  <div className={`transition-all ${carryCount > 0 ? 'text-white' : 'text-slate-200'} ${needsCarry ? 'text-red-400' : ''}`}>{finalM}</div>
+                <div className="text-blue-300 pr-2">{top.m}</div>
+
+                <div className="text-slate-400 pr-2">+</div>
+                <div className="text-green-300 pr-2">{bot.h}</div>
+                <div className="text-green-300 pr-2">{bot.m}</div>
+
+                <div className="col-span-3 border-t-2 border-slate-500 my-1"></div>
+
+                <div></div>
+                <div className="text-white font-bold pr-2">{finalH}</div>
+                <div className="relative text-white pr-2">
+                  {carryCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-slate-400 text-xl line-through decoration-red-500 decoration-2">{rawSumM}</div>}
+                  <span className={needsCarry ? "text-red-400 font-bold" : "font-bold"}>{finalM}</span>
                   {needsCarry && !drag.active && (
-                    <div className="absolute -right-16 top-0 bg-yellow-500 hover:bg-yellow-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none"
+                    <div className="absolute -right-20 top-0 bg-yellow-500 hover:bg-yellow-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none"
                          onPointerDown={(e) => startDrag(e, 'carry')} style={{ touchAction: 'none' }}>
                       <Hand size={16}/> 換
                     </div>
@@ -286,39 +288,41 @@
           const needsBorrow = finalM < 0;
 
           return (
-            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-2xl relative select-none mt-6">
+            <div className="flex flex-col items-center bg-[#1e293b] text-white p-8 rounded-2xl shadow-xl w-full max-w-md mx-auto font-mono text-3xl relative select-none mt-6">
               <h3 className="absolute top-4 left-4 text-sm text-slate-400 font-sans flex items-center gap-2">
                 直式計算區 <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded text-xs">減法借位</span>
               </h3>
-              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center mt-6">
-                <div className="text-slate-500 font-bold"></div>
-                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2">時</div>
-                <div className="text-slate-400 font-bold border-b border-slate-600 pb-2" data-dropzone="minute">分</div>
-                <div className="text-right"></div>
-                <div className="relative flex flex-col items-center">
-                  {borrowCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{top.h}</div>}
-                  <div className={`transition-all ${borrowCount > 0 ? 'text-orange-300' : 'text-blue-300'}`}>{effTopH}</div>
+              <div className="grid grid-cols-[2rem_4rem_4rem] gap-x-6 gap-y-3 text-right mt-8">
+                <div className="text-slate-500"></div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center">時</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center" data-dropzone="minute">分</div>
+                
+                <div></div>
+                <div className="relative text-blue-300 pr-2">
+                  {borrowCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-orange-400 text-2xl font-bold">{effTopH}</div>}
+                  <span className={borrowCount > 0 ? "line-through text-slate-500 decoration-red-500/80 decoration-2" : ""}>{top.h}</span>
                   {needsBorrow && !drag.active && (
-                    <div className="absolute -left-16 top-0 bg-orange-500 hover:bg-orange-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none z-10"
+                    <div className="absolute -left-20 top-0 bg-orange-500 hover:bg-orange-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none z-10"
                          onPointerDown={(e) => startDrag(e, 'borrow')} style={{ touchAction: 'none' }}>
                       <Hand size={16}/> 借
                     </div>
                   )}
                 </div>
-                <div className="relative flex flex-col items-center" data-dropzone="minute">
-                  {borrowCount > 0 && <div className="text-slate-400 text-sm absolute -top-6 line-through">{top.m}</div>}
-                  <div className={`transition-all ${borrowCount > 0 ? 'text-orange-300' : 'text-blue-300'} ${needsBorrow ? 'text-red-400' : ''}`}>{effTopM}</div>
+                <div className="relative text-blue-300 pr-2" data-dropzone="minute">
+                  {borrowCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-orange-400 text-2xl font-bold">{effTopM}</div>}
+                  <span className={borrowCount > 0 ? "line-through text-slate-500 decoration-red-500/80 decoration-2" : (needsBorrow ? "text-red-400" : "")}>{top.m}</span>
                   {drag.active && drag.type === 'borrow' && <div className="absolute inset-0 border-2 border-orange-400/50 border-dashed rounded-lg bg-orange-400/10 animate-pulse"></div>}
                 </div>
-                <div className="text-right text-slate-400">-</div>
-                <div className="text-green-300">{bot.h}</div>
-                <div className="text-green-300">{bot.m}</div>
-              </div>
-              <div className="w-[15rem] border-t-2 border-slate-500 my-4"></div>
-              <div className="grid grid-cols-[3rem_5rem_5rem] gap-4 text-center">
-                <div className="text-right"></div>
-                <div className="text-white font-bold">{needsBorrow ? '?' : finalH}</div>
-                <div className="text-white font-bold">{needsBorrow ? '?' : finalM}</div>
+
+                <div className="text-slate-400 pr-2">-</div>
+                <div className="text-green-300 pr-2">{bot.h}</div>
+                <div className="text-green-300 pr-2">{bot.m}</div>
+
+                <div className="col-span-3 border-t-2 border-slate-500 my-1"></div>
+
+                <div></div>
+                <div className="text-white font-bold pr-2">{needsBorrow ? '?' : finalH}</div>
+                <div className="text-white font-bold pr-2">{needsBorrow ? '?' : finalM}</div>
               </div>
               {needsBorrow && <div className="mt-8 text-sm text-orange-300/80 font-sans bg-orange-400/10 px-4 py-2 rounded-lg border border-orange-400/20">提示：分鐘不夠減，請按住左側「借」按鈕拖曳至「分」進行借位！</div>}
             </div>
@@ -435,7 +439,7 @@
               {/* 輸入與數線區塊 */}
               <div className="relative flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 bg-slate-50 p-6 md:pt-24 md:pb-16 rounded-3xl border border-slate-200 mb-8">
                 
-                <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 w-[34rem] h-[6px] bg-blue-500 pointer-events-none z-0 -translate-y-1/2"></div>
+                <div className="hidden md:block absolute top-1/2 left-[18%] right-[18%] h-[6px] bg-blue-500 pointer-events-none z-0 -translate-y-1/2 rounded-full"></div>
 
                 <div className={`relative w-full md:w-56 z-20 ${p2Quiz.active && p2Quiz.targetField === 'start' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
                   <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'start' ? 'border-slate-200 opacity-90' : 'border-blue-200 focus-within:border-blue-400 focus-within:shadow-md hover:-translate-y-1'}`}>
@@ -455,7 +459,7 @@
                   </div>
                 </div>
 
-                <div className={`relative w-full md:w-56 z-20 md:-translate-y-[55%] ${p2Quiz.active && p2Quiz.targetField === 'duration' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
+                <div className={`relative w-full md:w-56 z-20 md:-translate-y-1/2 ${p2Quiz.active && p2Quiz.targetField === 'duration' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
                   <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'duration' ? 'border-slate-200 opacity-90' : 'border-green-200 focus-within:border-green-400 focus-within:shadow-md hover:-translate-y-1'}`}>
                     <span className="text-green-800 font-bold mb-3 flex items-center gap-2"><span className="font-black text-lg">go</span> 經過時間</span>
                     <div className="flex items-center justify-center gap-2 w-full">
