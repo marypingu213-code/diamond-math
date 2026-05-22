@@ -373,10 +373,10 @@
               <div className="relative w-full overflow-x-auto pb-6 hide-scrollbar cursor-grab active:cursor-grabbing">
                 <div className="min-w-[900px] relative px-6 pt-10 flex flex-col">
                   <div className="absolute top-0 left-6 right-[50%] h-10 bg-amber-50 rounded-tl-xl border-t-4 border-amber-300 flex items-center justify-center text-amber-700 font-bold text-sm">
-                    <Sun size={16} className="mr-1"/> 上午 (0~12時)
+                    <span className="font-black text-lg mr-2">AM</span> 上午 (0~12時)
                   </div>
                   <div className="absolute top-0 left-[50%] right-6 h-10 bg-indigo-50 rounded-tr-xl border-t-4 border-indigo-300 flex items-center justify-center text-indigo-700 font-bold text-sm">
-                    <Moon size={16} className="mr-1"/> 下午 (13~24時)
+                    <span className="font-black text-lg mr-2">PM</span> 下午 (13~24時)
                   </div>
 
                   <div className="relative flex justify-between items-center mt-10">
@@ -435,14 +435,11 @@
               {/* 輸入與數線區塊 */}
               <div className="relative flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 bg-slate-50 p-6 md:pt-24 md:pb-16 rounded-3xl border border-slate-200 mb-8">
                 
-                <div className="hidden md:block absolute top-1/2 left-[5%] right-[5%] pointer-events-none z-0">
-                  <div className="absolute w-full h-[6px] bg-blue-500 rounded-full -translate-y-1/2"></div>
-                  <div className="absolute right-[-4px] top-1/2 w-0 h-0 border-y-[8px] border-y-transparent border-l-[16px] border-l-blue-500 -translate-y-1/2"></div>
-                </div>
+                <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 w-[34rem] h-[6px] bg-blue-500 pointer-events-none z-0 -translate-y-1/2"></div>
 
                 <div className={`relative w-full md:w-56 z-20 ${p2Quiz.active && p2Quiz.targetField === 'start' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
                   <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'start' ? 'border-slate-200 opacity-90' : 'border-blue-200 focus-within:border-blue-400 focus-within:shadow-md hover:-translate-y-1'}`}>
-                    <span className="text-blue-800 font-bold mb-3 flex items-center gap-2"><CheckCircle2 size={18}/> 開始時間</span>
+                    <span className="text-blue-800 font-bold mb-3 flex items-center gap-2"><span className="font-black text-lg">START</span> 開始時間</span>
                     <div className="flex items-center justify-center gap-2 w-full">
                       <div className="flex items-center gap-1">
                         <input type="number" min="0" placeholder="時" value={fields.start.h} onChange={(e) => handleInputChange('start', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'start'}
@@ -460,7 +457,7 @@
 
                 <div className={`relative w-full md:w-56 z-20 md:-translate-y-[55%] ${p2Quiz.active && p2Quiz.targetField === 'duration' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
                   <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'duration' ? 'border-slate-200 opacity-90' : 'border-green-200 focus-within:border-green-400 focus-within:shadow-md hover:-translate-y-1'}`}>
-                    <span className="text-green-800 font-bold mb-3 flex items-center gap-2"><History size={18}/> 經過時間</span>
+                    <span className="text-green-800 font-bold mb-3 flex items-center gap-2"><span className="font-black text-lg">go</span> 經過時間</span>
                     <div className="flex items-center justify-center gap-2 w-full">
                       <div className="flex items-center gap-1">
                         <input type="number" min="0" placeholder="時" value={fields.duration.h} onChange={(e) => handleInputChange('duration', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'duration'}
@@ -478,7 +475,7 @@
 
                 <div className={`relative w-full md:w-56 z-20 ${p2Quiz.active && p2Quiz.targetField === 'end' ? 'ring-4 ring-emerald-400 rounded-2xl shadow-xl scale-105 transition-all' : ''}`}>
                   <div className={`flex flex-col items-center p-4 rounded-2xl transition-all bg-white border-2 ${p2Quiz.active && p2Quiz.targetField !== 'end' ? 'border-slate-200 opacity-90' : 'border-purple-200 focus-within:border-purple-400 focus-within:shadow-md hover:-translate-y-1'}`}>
-                    <span className="text-purple-800 font-bold mb-3 flex items-center gap-2"><CheckCircle2 size={18}/> 結束時間</span>
+                    <span className="text-purple-800 font-bold mb-3 flex items-center gap-2"><span className="font-black text-lg">END</span> 結束時間</span>
                     <div className="flex items-center justify-center gap-2 w-full">
                       <div className="flex items-center gap-1">
                         <input type="number" min="0" placeholder="時" value={fields.end.h} onChange={(e) => handleInputChange('end', 'h', e.target.value)} disabled={p2Quiz.active && p2Quiz.targetField !== 'end'}
