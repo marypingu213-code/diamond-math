@@ -247,12 +247,12 @@
               </h3>
               <div className="grid grid-cols-[2rem_4rem_4rem] gap-x-6 gap-y-3 text-right mt-8">
                 <div className="text-slate-500"></div>
-                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center" data-dropzone="hour">時</div>
-                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center">分</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center mb-8" data-dropzone="hour">時</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center mb-8">分</div>
                 
                 <div></div>
                 <div className="relative text-blue-300 pr-2" data-dropzone="hour">
-                  {carryCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-yellow-400 text-xl font-bold animate-bounce">+{carryCount}</div>}
+                  {carryCount > 0 && <div className="absolute bottom-full right-2 mb-2 text-yellow-400 text-3xl font-bold animate-bounce">+{carryCount}</div>}
                   {top.h}
                   {drag.active && drag.type === 'carry' && <div className="absolute inset-0 border-2 border-yellow-400/50 border-dashed rounded-lg bg-yellow-400/10 animate-pulse"></div>}
                 </div>
@@ -265,9 +265,9 @@
                 <div className="col-span-3 border-t-2 border-slate-500 my-1"></div>
 
                 <div></div>
-                <div className="text-white font-bold pr-2">{finalH}</div>
-                <div className="relative text-white pr-2">
-                  {carryCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-slate-400 text-xl line-through decoration-red-500 decoration-2">{rawSumM}</div>}
+                <div className="text-white font-bold pr-2 mt-8">{finalH}</div>
+                <div className="relative text-white pr-2 mt-8">
+                  {carryCount > 0 && <div className="absolute bottom-full right-2 mb-2 text-slate-400 text-3xl line-through decoration-red-500 decoration-2">{rawSumM}</div>}
                   <span className={needsCarry ? "text-red-400 font-bold" : "font-bold"}>{finalM}</span>
                   {needsCarry && !drag.active && (
                     <div className="absolute -right-20 top-0 bg-yellow-500 hover:bg-yellow-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none"
@@ -294,12 +294,12 @@
               </h3>
               <div className="grid grid-cols-[2rem_4rem_4rem] gap-x-6 gap-y-3 text-right mt-8">
                 <div className="text-slate-500"></div>
-                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center">時</div>
-                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center" data-dropzone="minute">分</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center mb-8">時</div>
+                <div className="text-slate-400 text-xl border-b border-slate-600 pb-2 text-center mb-8" data-dropzone="minute">分</div>
                 
                 <div></div>
                 <div className="relative text-blue-300 pr-2">
-                  {borrowCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-orange-400 text-2xl font-bold">{effTopH}</div>}
+                  {borrowCount > 0 && <div className="absolute bottom-full right-2 mb-2 text-orange-400 text-3xl font-bold">{effTopH}</div>}
                   <span className={borrowCount > 0 ? "line-through text-slate-500 decoration-red-500/80 decoration-2" : ""}>{top.h}</span>
                   {needsBorrow && !drag.active && (
                     <div className="absolute -left-20 top-0 bg-orange-500 hover:bg-orange-400 text-slate-900 text-sm font-sans font-bold px-3 py-2 rounded-full cursor-grab active:cursor-grabbing shadow-lg flex items-center gap-1 touch-none z-10"
@@ -309,7 +309,7 @@
                   )}
                 </div>
                 <div className="relative text-blue-300 pr-2" data-dropzone="minute">
-                  {borrowCount > 0 && <div className="absolute bottom-[90%] right-2 mb-1 text-orange-400 text-2xl font-bold">{effTopM}</div>}
+                  {borrowCount > 0 && <div className="absolute bottom-full right-2 mb-2 text-orange-400 text-3xl font-bold">{effTopM}</div>}
                   <span className={borrowCount > 0 ? "line-through text-slate-500 decoration-red-500/80 decoration-2" : (needsBorrow ? "text-red-400" : "")}>{top.m}</span>
                   {drag.active && drag.type === 'borrow' && <div className="absolute inset-0 border-2 border-orange-400/50 border-dashed rounded-lg bg-orange-400/10 animate-pulse"></div>}
                 </div>
