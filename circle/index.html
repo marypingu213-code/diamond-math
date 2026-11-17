@@ -36,7 +36,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;font-family:var(--font);font-size:16px;line-height:1.6;color:var(--ink);background:var(--bg);
+body{margin:0;font-family:var(--font);font-size:1rem;line-height:1.6;color:var(--ink);background:var(--bg);
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:24px 24px;}
 .wrap{max-width:1240px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
@@ -48,7 +48,7 @@ button{cursor:pointer}
 
 header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 .brand{display:flex;align-items:center;gap:12px}
-.brand svg{flex:none}
+.brand svg{flex:none;width:2.8rem;height:2.8rem}
 .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:.02em;text-wrap:balance}
 .brand p{margin:0;color:var(--muted);font-size:.9rem}
 .tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px}
@@ -56,7 +56,7 @@ header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
 
 .app{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
-@media (max-width:920px){.app{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:699px),(max-height:479px){.app{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;min-width:0}
 .stack{display:flex;flex-direction:column;gap:16px;min-width:0}
 
@@ -133,12 +133,20 @@ header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-
 .arw .sub .nl{font-size:.8rem;font-weight:700;color:var(--muted)}
 .map .no{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:.78rem;font-weight:700;text-align:center;border-left:2px dashed var(--line);margin-left:50%;padding-left:8px;justify-self:start}
 @media (max-width:480px){.arw .ex{font-size:.72rem}.map{grid-template-columns:minmax(0,1fr) minmax(64px,auto) minmax(0,1fr);gap:6px}.arw .ot{padding:2px 4px;font-size:.85rem}.node{padding:8px 6px}}
-.path-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
-.squares{margin-top:12px;overflow-x:auto}
-.squares table{border-collapse:collapse;font-family:var(--num);font-size:.85rem}
-.squares td,.squares th{border:1px solid var(--line);padding:3px 8px;text-align:center;white-space:nowrap}
-.squares th{color:var(--muted);font-weight:600;font-family:var(--font)}
-.squares td.hit{background:var(--r-soft);color:var(--r);font-weight:700}
+.path-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hint-body{display:flex;flex-direction:column;gap:12px}
+.hint-body .map{width:100%}
+.hint-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.path-tools{margin-top:0}
+.sq-title{font-weight:700;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+.sqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2em,1fr));gap:3px;font-family:var(--num);font-size:.8rem}
+.sqgrid span{border:1px solid var(--line);border-radius:6px;padding:1px 6px;text-align:center;white-space:nowrap}
+.sqgrid span.hit{background:var(--r-soft);color:var(--r);border-color:var(--r);font-weight:700}
+@media (min-width:700px) and (min-height:480px) and (min-aspect-ratio:5/4){
+  .hint-body{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:1.6vw;align-items:center}
+  .hint-body .map{margin:0;max-width:none}
+  .qnav{border-top:0;margin-top:.5em;padding-top:0}
+}
 
 .solution ol{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
 .solution li{font-family:var(--num);font-variant-numeric:tabular-nums}
@@ -146,7 +154,30 @@ header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-
 
 /* calculator */
 aside.calc{position:sticky;top:max(16px,env(safe-area-inset-top,0px));}
-@media (max-width:920px){aside.calc{position:static}}
+@media (max-width:699px),(max-height:479px){aside.calc{position:static}}
+/* Full-screen mode: on TVs, laptops and tablets everything fits one screen. Type scales with the screen;
+   panels that still run long are shrunk to fit (see fitAll in the script) instead of scrolling. */
+@media (min-width:700px) and (min-height:480px){
+  html{font-size:clamp(12px,calc(.55vw + .85vh),30px)}
+  html,body{height:100%}
+  body{overflow:hidden}
+  .wrap{height:100%;max-width:none;display:flex;flex-direction:column;padding-block:clamp(6px,1.4vh,24px)}
+  header.top{flex:none;margin-bottom:1.2vh}
+  .brand h1{font-size:1.5rem}
+  .app{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) clamp(250px,27vw,560px);align-items:stretch;gap:1.4vw}
+  main.stack{min-height:0;display:flex;flex-direction:column}
+  main.stack > section{flex:1;min-height:0}
+  #view-practice{display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:1.2vh}
+  .panel{padding:clamp(8px,1.6vmin,24px)}
+  .qtext{font-size:1.5rem;margin:.2em 0 .6em}
+  .qnav{margin-top:.8em;padding-top:.7em}
+  #hint,#solution{grid-row:3;min-height:0;overflow:hidden}
+  aside.calc{position:static;min-height:0;overflow:hidden}
+  #view-setup .setup{height:100%}
+  #view-setup .panel{min-height:0;overflow:auto}
+  .dot{width:1.9rem;height:1.9rem}
+}
+.fit{transform-origin:top left;display:flow-root}
 .calc h2{margin:0 0 4px;font-size:1.15rem;display:flex;align-items:center;gap:8px}
 .calc .pi{font-family:var(--num);background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:0 8px;font-size:.95rem}
 .calc p.sub{margin:0 0 12px;color:var(--muted);font-size:.85rem}
@@ -317,7 +348,7 @@ textarea.field{width:100%;min-height:70px;font-family:var(--num);font-size:.8rem
     </main>
 
     <!-- 圓周率計算器 -->
-    <aside class="panel calc" aria-label="圓周率計算器">
+    <aside class="panel calc" aria-label="圓周率計算器"><div class="fit">
       <h2>圓周率計算器 <span class="pi">π≈3.14</span></h2>
       <p class="sub">輸入數字，馬上幫你算，也會拆開讓你看怎麼算。</p>
       <div class="modes" id="modes">
@@ -341,7 +372,7 @@ textarea.field{width:100%;min-height:70px;font-family:var(--num);font-size:.8rem
         <summary>3.14 乘法表</summary>
         <div class="table314" id="t314"></div>
       </details>
-    </aside>
+    </div></aside>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -543,7 +574,7 @@ function renderPractice(){
   $('#prev').onclick = () => go(idx - 1);
   $('#next').onclick = () => go(idx + 1);
   $('#toggle-hint').onclick = e => { hintOpen = !hintOpen; e.target.textContent = (hintOpen ? '收起' : '打開') + (t.path ? '視覺路徑' : '提示板'); renderHint(p); };
-  $('#show-sol').onclick = e => { solShown = !solShown; e.target.textContent = solShown ? '收起解答' : '看解答'; renderSolution(p); };
+  $('#show-sol').onclick = e => { solShown = !solShown; e.target.textContent = solShown ? '收起解答' : '看解答'; renderSolution(p); renderHint(p); };
   renderHint(p);
   renderSolution(p);
 }
@@ -558,7 +589,7 @@ function check(){
   fb.innerHTML = ok
     ? `<div class="feedback ok">答對了！${NAME[t.ask]}是 ${f(p.v.answer)} ${unitOf(t.ask, p.unit)}。</div>`
     : `<div class="feedback bad">還不對喔。<small>${diagnose(p, x)}</small></div>`;
-  renderDots();
+  renderDots(); refit();
 }
 
 /* ---------- hint board / visual path ---------- */
@@ -572,8 +603,9 @@ const TIPS = {
 };
 function renderHint(p){
   const box = $('#hint');
-  box.hidden = !hintOpen;
-  if (hintOpen) renderPath(p);
+  box.hidden = !hintOpen || solShown;
+  if (hintOpen && !solShown) renderPath(p);
+  refit();
 }
 
 /* Fixed 2x2 map. Each type walks a route through it; corners off the route are covered. */
@@ -627,25 +659,25 @@ function renderPath(p){
     return `<div class="arw a-${name}"><span class="glyph">${a.glyph}</span>${txt}${sub}</div>`;
   };
   const sq = p.type === 'A2C' ? (() => {
-    const max = Math.max(20, Math.ceil(p.v.r));
-    let h = '<tr><th>半徑</th>', b = '<tr><th>半徑×半徑</th>';
-    for (let i = 1; i <= max; i++){ const hit = (i === p.v.r && revealed >= 2) ? ' class="hit"' : ''; h += `<td${hit}>${i}</td>`; b += `<td${hit}>${i*i}</td>`; }
-    return `<div class="squares"><table><tbody>${h}</tr>${b}</tr></tbody></table></div>`;
+    const max = Math.max(20, Math.ceil(p.v.r)); let h = '';
+    for (let i = 1; i <= max; i++) h += `<span${i === p.v.r && revealed >= 2 ? ' class="hit"' : ''}>${i}×${i}=${i*i}</span>`;
+    return `<div class="squares"><div class="sq-title">平方表：哪個數 × 自己？</div><div class="sqgrid">${h}</div></div>`;
   })() : '';
   box.innerHTML = `
     <div class="hint-title"><h2>${t.path ? '視覺路徑' : '提示板'}</h2><span class="chip ${t.path ? 'path' : ''}">${t.label}</span></div>
     <p style="margin:0 0 12px;color:var(--muted)">從「${NAME[t.give]}」出發，沿著箭頭走到「${NAME[t.ask]}」。每一格填對會變綠色。</p>
-    <div class="map">
+    <div class="hint-body"><div class="map">
       ${Object.values(M.B).map(node).join('')}
       ${Object.entries(M.arrows).map(([k, a]) => arrow(k, a)).join('')}
       ${M.route.includes('c') && M.route.includes('a') ? '<div class="no">周長和面積<br>不能直接換</div>' : ''}
     </div>
+    <div class="hint-side">
     ${sq}
-    ${TIPS[p.type] ? `<div class="callout ${TIPS[p.type][0]}" style="margin-top:12px">${TIPS[p.type][1]}</div>` : ''}
+    ${TIPS[p.type] ? `<div class="callout ${TIPS[p.type][0]}">${TIPS[p.type][1]}</div>` : ''}
     <div class="path-tools">
       <button class="btn sm ghost" id="reveal" ${revealed >= M.total ? 'disabled' : ''}>給我下一步</button>
       <span style="color:var(--muted);font-size:.85rem">右邊的計算器可以幫你算 ÷ 3.14 和 × 3.14</span>
-    </div>`;
+    </div></div></div>`;
   // which values are known: given, or the student's box is correct
   const known = key => {
     const nd = M.B[key];
@@ -668,21 +700,23 @@ function renderPath(p){
       if (i.value.trim() !== '') i.classList.add(near(x, +i.dataset.exp) ? 'ok' : 'bad');
     };
     mark();
-    i.addEventListener('input', () => { mark(); updateEx(); });
+    i.addEventListener('input', () => { mark(); updateEx(); refit(); });
     i.addEventListener('focus', () => lastInput = i);
   });
   updateEx();
   $('#reveal').onclick = () => { revealed++; renderPath(p); };
+  wrapFit(box); refit();
 }
 
 function renderSolution(p){
   const box = $('#solution');
   box.hidden = !solShown;
-  if (!solShown) return;
+  if (!solShown){ refit(); return; }
   const t = TYPES[p.type];
   box.innerHTML = `<div class="hint-title"><h2>解答</h2></div>
     <ol>${steps(p).map(([a, b]) => `<li><span class="t">${a}</span><br>${b}</li>`).join('')}</ol>
     <p style="margin:12px 0 0;font-weight:700">答：${NAME[t.ask]}是 ${f(p.v.answer)} ${unitOf(t.ask, p.unit)}</p>`;
+  wrapFit(box); refit();
 }
 
 /* ---------- calculator ---------- */
@@ -726,6 +760,7 @@ function calc(){
   }
   out.textContent = f(res);
   st.innerHTML = rows.join('');
+  refit();
   return {n, res};
 }
 function renderHist(){
@@ -735,7 +770,7 @@ function saveHist(){
   const r = calc(); if (!r) return;
   if (hist[0] && hist[0].n === r.n && hist[0].mode === mode) return;
   hist.unshift({n:r.n, mode, res:r.res}); hist = hist.slice(0, 6);
-  store.set('circle.hist', hist); renderHist();
+  store.set('circle.hist', hist); renderHist(); refit();
 }
 $('#calc-in').addEventListener('input', calc);
 $('#calc-in').addEventListener('keydown', e => { if (e.key === 'Enter') saveHist(); });
@@ -881,6 +916,43 @@ function showTab(name){
 }
 document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
 $('#dots').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) go(+b.dataset.i); });
+/* ---------- full-screen fitting ---------- */
+const FIT = window.matchMedia('(min-width:700px) and (min-height:480px)');
+function wrapFit(el){
+  if (el.children.length === 1 && el.firstElementChild.classList.contains('fit')) return;
+  const d = document.createElement('div'); d.className = 'fit';
+  while (el.firstChild) d.appendChild(el.firstChild);
+  el.appendChild(d);
+}
+function fitOne(el){
+  const inner = el && el.querySelector(':scope > .fit');
+  if (!inner || el.hidden) return;
+  inner.style.transform = ''; inner.style.width = '';
+  if (!FIT.matches) return;
+  const cs = getComputedStyle(el);
+  const avail = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const room = avail - 6;                 // small safety margin so nothing touches the edge
+  let need = inner.scrollHeight;
+  if (need <= room) return;
+  let k = room / need;
+  for (let i = 0; i < 3; i++){            // widening lets text reflow shorter; settle the scale
+    inner.style.width = (100 / k) + '%';
+    k = Math.min(1, room / inner.scrollHeight);
+  }
+  inner.style.width = (100 / k) + '%';
+  k = Math.max(0.35, Math.min(k, room / inner.scrollHeight));   // final check at the width actually used
+  inner.style.transform = `scale(${k})`;
+}
+let fitQueued = false;
+function refit(){
+  if (fitQueued) return; fitQueued = true;
+  requestAnimationFrame(() => { fitQueued = false; ['#hint', '#solution', 'aside.calc'].forEach(sel => fitOne($(sel))); });
+}
+window.addEventListener('resize', refit);
+if (FIT.addEventListener) FIT.addEventListener('change', refit);
+document.addEventListener('toggle', refit, true);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+
 let tt;
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2200); }
 
